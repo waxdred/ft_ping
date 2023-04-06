@@ -1,5 +1,10 @@
 #include "../includes/ping.h"
 
+int signalStop;
+
+static void handle_signal() {
+  signalStop = 0;
+}
 static void help() {
   printf("ft_ping help");
   printf("\n");
@@ -78,8 +83,8 @@ static int ft_receive(t_ping *ping) {
     return EXIT_FAILURE;
   }
 
-  printf("%d bytes from %s: seq=%d ttl=%d time=0.%.1ld ms\n", 
-            ret, inet_ntoa(from.sin_addr), ping->seq, ping->ttl, ping->tv.tv_usec / 1000);
+  printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=0.%.1ld ms\n", 
+            ret,ping->hostname, ping->ip, ping->seq, ping->ttl, ping->tv.tv_usec / 1000);
   ping->seqRecv++;
   return EXIT_SUCCESS;
 }
@@ -96,6 +101,8 @@ static void fill_seq_icmp(t_ping *ping){
 
 static int openSocket(t_ping *ping) {
     // need check packet size default at 56
+  struct timeval timeout = {5, 0};
+  socklen_t len = sizeof(timeout);
   ping->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   if (ping->sockfd == -1) {
     perror("Error socket");
@@ -110,6 +117,10 @@ static int openSocket(t_ping *ping) {
   if (ping->getname(ping)){
       return EXIT_FAILURE;
   }
+  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, len) < 0){
+      perror("Error getsockopt");
+      return EXIT_FAILURE;
+  }
   ping->icmp_header = (struct icmp *)ping->packet;
   ping->dest_addr.sin_family = AF_INET;
   ping->dest_addr.sin_addr.s_addr = inet_addr(ping->ip);
@@ -118,7 +129,7 @@ static int openSocket(t_ping *ping) {
 
 static void closePing(t_ping *ping){
     printf("--- %s ping statistics ---\n", ping->hostname);
-    printf("%d packets transmitted, %d packets receive, %f.2%% packet loss\n", ping->seq, ping->seqRecv, 0.0);
+    printf("%d packets transmitted, %d packets receive, %f.2%% packet loss, time %.1ldms\n", ping->seq, ping->seqRecv, 0.0, ping->start.tv_usec / 100);
     ping->free(ping, 1);
     close(ping->sockfd);
 }
@@ -142,6 +153,29 @@ static int host_to_ip(t_ping *ping){
     return EXIT_SUCCESS;
 }
 
+
+int run_ping(t_ping *ping){
+  signalStop = 1;
+  signal(SIGINT, handle_signal);
+
+  printf("PING %s (%s): %d data bytes\n", ping->hostname,
+         ping->ip, ping->pacetSize);
+
+  gettimeofday(&ping->start, NULL);
+  while (signalStop) {
+    sleep(1);
+    gettimeofday(&ping->tv, NULL);
+    if (ping->send(ping)) {
+      perror("Error sendto");
+      ping->close(ping);
+      break;
+    }
+    ping->receive(ping);
+  }
+  ping->close(ping);
+  return EXIT_SUCCESS;
+}
+
 t_ping *initPing() {
   t_ping *ping = malloc(sizeof(t_ping));
 
@@ -156,6 +190,7 @@ t_ping *initPing() {
   ping->receive = &ft_receive;
   ping->close = &closePing;
   ping->getname = &host_to_ip;
+  ping->run = &run_ping;
   ping->header = fill_seq_icmp;
   ping->ttl = 64;
   return (ping);

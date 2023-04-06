@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <signal.h>
 
 #define BUFF_SIZE 1024
 typedef struct s_ping {
@@ -30,11 +31,13 @@ typedef struct s_ping {
   struct icmp *icmp_header;
   struct sockaddr_in dest_addr;
   struct timeval tv;
+  struct timeval start;
   void (*close)(struct s_ping *);
   void (*free)(struct s_ping *, int pack);
   void (*header)(struct s_ping *);
   void (*help)(void);
   int (*getname)(struct s_ping*);
+  int (*run)(struct s_ping*);
 
 } t_ping;
 t_ping *initPing();

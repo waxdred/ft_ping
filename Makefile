@@ -77,4 +77,5 @@ fclean: clean
 
 send: 
 	@scp -r ../ft_ping vm:/home/jmilhas/
+
 re:	fclean all
