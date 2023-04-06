@@ -6,15 +6,12 @@
 
 int signalStop;
 
-void handle_signal(int signal) {
-  printf("\nSignal %d reçu. Sortie.\n", signal);
+void handle_signal() {
   signalStop = 0;
-  exit(0);
 }
 
 int main(int ac, char *av[]) {
   t_ping *ping;
-  int opt = 0;
   signalStop = 1;
   signal(SIGINT, handle_signal);
 
@@ -28,14 +25,6 @@ int main(int ac, char *av[]) {
     exit(EXIT_FAILURE);
   }
 
-  while ((opt = getopt(ac, av, "hv")) != -1) {
-    switch (opt) {
-    case 'h':
-      ping->help();
-    case 'v':
-      ping->verose = 1;
-    }
-  }
   if (ping->parse(ping, ac, av)) {
     ping->free(ping, 0);
     return EXIT_FAILURE;
@@ -48,10 +37,11 @@ int main(int ac, char *av[]) {
       ping->free(ping, 0);
     return EXIT_FAILURE;
   }
-  printf("PING %s (%s): %d data bytes\n", ping->adress,
+  printf("PING %s (%s): %d data bytes\n", ping->hostname,
          inet_ntoa(ping->dest_addr.sin_addr), ping->pacetSize);
   while (signalStop) {
     sleep(2);
+    gettimeofday(&ping->tv, NULL);
     if (ping->send(ping)) {
       perror("Error sendto");
       ping->free(ping, 1);
@@ -62,6 +52,6 @@ int main(int ac, char *av[]) {
       return EXIT_FAILURE;
     }
   }
-  ping->free(ping, 1);
+  ping->close(ping);
   return (0);
 }
