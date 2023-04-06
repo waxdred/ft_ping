@@ -75,7 +75,7 @@ fclean: clean
 	@printf "\tDelete $(COLOR_RED)all binary on $(DIR_LIBFT)$(COLOR_NORM)\n"
 	@rm -rf $(NAME)
 
-send: 
+send: fclean 
 	@scp -r ../ft_ping vm:/home/jmilhas/
 
 re:	fclean all

@@ -22,6 +22,7 @@ typedef struct s_ping {
   int (*parse)(struct s_ping *, int ac, char **av);
   int (*receive)(struct s_ping *);
   int (*send)(struct s_ping *);
+  int alloc;
   int pacetSize;
   int seq;
   int seqRecv;
@@ -33,7 +34,7 @@ typedef struct s_ping {
   struct timeval tv;
   struct timeval start;
   void (*close)(struct s_ping *);
-  void (*free)(struct s_ping *, int pack);
+  void (*free)(struct s_ping *);
   void (*header)(struct s_ping *);
   void (*help)(void);
   int (*getname)(struct s_ping*);

@@ -10,8 +10,8 @@ static void help() {
   printf("\n");
 }
 
-static void freePing(t_ping *ping, int pack) {
-  if (pack == 1)
+static void freePing(t_ping *ping) {
+  if (ping->alloc == 1)
     free(ping->packet);
   free(ping);
 }
@@ -114,6 +114,7 @@ static int openSocket(t_ping *ping) {
     perror("Error malloc");
     return 2;
   }
+  ping->alloc = 1;
   if (ping->getname(ping)){
       return EXIT_FAILURE;
   }
@@ -129,8 +130,8 @@ static int openSocket(t_ping *ping) {
 
 static void closePing(t_ping *ping){
     printf("--- %s ping statistics ---\n", ping->hostname);
-    printf("%d packets transmitted, %d packets receive, %f.2%% packet loss, time %.1ldms\n", ping->seq, ping->seqRecv, 0.0, ping->start.tv_usec / 100);
-    ping->free(ping, 1);
+    printf("%d packets transmitted, %d packets receive, %.f%% packet loss, time %.1ldms\n", ping->seq, ping->seqRecv, 0.0, ping->start.tv_usec / 100);
+    ping->free(ping);
     close(ping->sockfd);
 }
 
