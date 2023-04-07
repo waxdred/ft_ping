@@ -7,7 +7,7 @@ int main(int ac, char *av[]) {
   if (ping == NULL)
     return EXIT_FAILURE;
   if (ac < 2) {
-    ping->help();
+    ping->help(av[0]);
     ping->free(ping);
     exit(EXIT_FAILURE);
   }

@@ -8,9 +8,8 @@
 int signalStop;
 
 static void handle_signal() { signalStop = 0; }
-static void help() {
-  printf("ft_ping help");
-  printf("\n");
+static void help(char *s) {
+  fprintf(stderr, "Usage: %s, [-h] [-v] ip_adress\n", s);
 }
 
 static void freePing(t_ping *ping) {
@@ -38,7 +37,7 @@ static int parse(t_ping *ping, int ac, char **av) {
   while ((opt = getopt(ac, av, "hv")) != -1) {
     switch (opt) {
     case 'h':
-      ping->help();
+      ping->help(av[0]);
       break;
     case 'v':
       ping->verose = 1;
