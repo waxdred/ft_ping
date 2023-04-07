@@ -25,7 +25,7 @@ typedef struct s_ping {
   char ip[100];
 
   int alloc;
-  int pacetSize;
+  int packetSize;
   int seqRecv;
   int sockfd;
   int ttl;

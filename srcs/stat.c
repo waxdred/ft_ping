@@ -1,6 +1,4 @@
 #include "../includes/stat.h"
-#include <stdlib.h>
-#include <sys/_types/_ssize_t.h>
 
 static int insert_data(t_stat *stat, double data, int flag) {
   t_data *add = malloc(sizeof(t_data));

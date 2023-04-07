@@ -1,9 +1,4 @@
 #include "../includes/ping.h"
-#include <errno.h>
-#include <netinet/ip.h>
-#include <stdio.h>
-#include <sys/_types/_timeval.h>
-#include <time.h>
 
 int signalStop;
 
@@ -47,7 +42,7 @@ static int parse(t_ping *ping, int ac, char **av) {
   if (optind < ac) {
     ping->hostname = av[optind];
   } else {
-    fprintf(stderr, "Usage: %s, [-h] [-v] ip_adress\n", av[0]);
+    fprintf(stderr, "ft_ping: Usage: %s, [-h] [-v] ip_adress\n", av[0]);
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
@@ -55,7 +50,7 @@ static int parse(t_ping *ping, int ac, char **av) {
 
 static int ft_send(t_ping *ping) {
   ping->header(ping);
-  if (sendto(ping->sockfd, ping->packet, ping->pacetSize, 0,
+  if (sendto(ping->sockfd, ping->packet, ping->packetSize, 0,
              (struct sockaddr *)&ping->dest_addr,
              sizeof(ping->dest_addr)) < 0) {
     fprintf(stderr, "ft_ping: error sending packet: %s\n", strerror(errno));
@@ -95,23 +90,22 @@ static void fill_seq_icmp(t_ping *ping) {
   ping->icmp_header->icmp_code = 0;
   ping->icmp_header->icmp_id = getpid() & 0xFFFF;
   ping->icmp_header->icmp_seq = htons(ping->seq);
-  memset(ping->icmp_header->icmp_data, '*', ping->pacetSize); // Données
+  memset(ping->icmp_header->icmp_data, '*', ping->packetSize);
   ping->icmp_header->icmp_cksum = 0;
   ping->icmp_header->icmp_cksum =
-      calculate_checksum((unsigned short *)ping->icmp_header, ping->pacetSize);
+      calculate_checksum((unsigned short *)ping->icmp_header, ping->packetSize);
 }
 
 static int openSocket(t_ping *ping) {
-  // need check packet size default at 56
-  struct timeval timeout = {5, 0};
+  struct timeval timeout = {1, 0};
   socklen_t len = sizeof(timeout);
   ping->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   if (ping->sockfd == -1) {
     fprintf(stderr, "ft_ping: error creation socket: %s\n", strerror(errno));
     return EXIT_FAILURE;
   }
-  ping->pacetSize = sizeof(struct icmp) + sizeof(struct timeval);
-  ping->packet = (char *)malloc(ping->pacetSize);
+  ping->packetSize = sizeof(struct icmp) + sizeof(struct timeval);
+  ping->packet = (char *)malloc(ping->packetSize);
   if (!ping->packet) {
     fprintf(stderr, "ft_ping: error allocation: %s\n", strerror(errno));
     return 2;
@@ -123,7 +117,14 @@ static int openSocket(t_ping *ping) {
   }
   // set time out for receive
   if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, len) < 0) {
-    fprintf(stderr, "ft_ping: error set setsockopt: %s\n", strerror(errno));
+    fprintf(stderr, "ft_ping: error set setsockopt timeout: %s\n",
+            strerror(errno));
+    return EXIT_FAILURE;
+  }
+  // set ttl
+  if (setsockopt(ping->sockfd, IPPROTO_IP, IP_TTL, &ping->ttl,
+                 sizeof(ping->ttl)) == -1) {
+    fprintf(stderr, "ft_ping: error set setsockopt ttl: %s\n", strerror(errno));
     return EXIT_FAILURE;
   }
   ping->dest_addr.sin_family = AF_INET;
@@ -186,7 +187,7 @@ int run_ping(t_ping *ping) {
   signal(SIGINT, handle_signal);
 
   printf("PING %s (%s): %d data bytes\n", ping->hostname, ping->ip,
-         ping->pacetSize);
+         ping->packetSize);
   gettimeofday(&ping->start, NULL);
   while (signalStop) {
     sleep(1);
