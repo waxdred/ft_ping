@@ -19,7 +19,7 @@ make
 
 Ensuite, exécutez ft_ping en tant que super utilisateur (root) ou avec les droits de CAP_NET_RAW:
 ```fish
-$ sudo ./ft_ping [-h|--help] [-v|--verbose] [-t TTL] [-s PACKET_SIZE] destination
+$ sudo ./ft_ping [-h] [-v] destination
 ```
 
 ## Les options sont:
@@ -30,7 +30,7 @@ $ sudo ./ft_ping [-h|--help] [-v|--verbose] [-t TTL] [-s PACKET_SIZE] destinatio
 ## Exemple d'utilisation:
 
 ```fish
-sudo ./ft_ping -v -t 64 -s 56 google.com
+sudo ./ft_ping -v google.com
 ```
 
 # Fonctionnement
