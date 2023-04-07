@@ -33,7 +33,7 @@ $ sudo ./ft_ping [-h|--help] [-v|--verbose] [-t TTL] [-s PACKET_SIZE] destinatio
 sudo ./ft_ping -v -t 64 -s 56 google.com
 ```
 
-#Fonctionnement
+# Fonctionnement
 
 Le programme ping permet de tester la connectivité réseau en envoyant des paquets ICMP Echo Request et en recevant des paquets ICMP Echo Reply en réponse. Le programme envoie une série de paquets à une adresse IP spécifiée et affiche le temps de réponse et d'autres statistiques.
 
