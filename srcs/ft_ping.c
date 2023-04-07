@@ -58,7 +58,7 @@ static int ft_send(t_ping *ping) {
   if (sendto(ping->sockfd, ping->packet, ping->pacetSize, 0,
              (struct sockaddr *)&ping->dest_addr,
              sizeof(ping->dest_addr)) < 0) {
-    fprintf(stderr, "Error sending packet: %s\n", strerror(errno));
+    fprintf(stderr, "ft_ping: error sending packet: %s\n", strerror(errno));
     return EXIT_FAILURE;
   }
   ping->seq++;
@@ -107,24 +107,23 @@ static int openSocket(t_ping *ping) {
   socklen_t len = sizeof(timeout);
   ping->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   if (ping->sockfd == -1) {
-    fprintf(stderr, "Error creation socket: %s\n", strerror(errno));
+    fprintf(stderr, "ft_ping: error creation socket: %s\n", strerror(errno));
     return EXIT_FAILURE;
   }
   ping->pacetSize = sizeof(struct icmp) + sizeof(struct timeval);
   ping->packet = (char *)malloc(ping->pacetSize);
   if (!ping->packet) {
-    fprintf(stderr, "Error allocation: %s\n", strerror(errno));
+    fprintf(stderr, "ft_ping: error allocation: %s\n", strerror(errno));
     return 2;
   }
   memset(ping->packet, 0, sizeof(struct icmp));
   ping->alloc = 1;
   if (ping->getname(ping)) {
-    fprintf(stderr, "Error get adress ip: %s\n", strerror(errno));
     return EXIT_FAILURE;
   }
   // set time out for receive
   if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, len) < 0) {
-    fprintf(stderr, "Error set setsockopt: %s\n", strerror(errno));
+    fprintf(stderr, "ft_ping: error set setsockopt: %s\n", strerror(errno));
     return EXIT_FAILURE;
   }
   ping->dest_addr.sin_family = AF_INET;
@@ -166,7 +165,11 @@ static int host_to_ip(t_ping *ping) {
 
   int recv = getaddrinfo(ping->hostname, NULL, &hint, &servinfo);
   if (recv < 0) {
-    perror("Error getaddrinfo");
+    perror("ft_ping: error getaddrinfo");
+    return EXIT_FAILURE;
+  } else if (servinfo == NULL) {
+    fprintf(stderr, "ft_ping: cannot resolve: %s: Unknown host\n",
+            ping->hostname);
     return EXIT_FAILURE;
   }
   for (tmp = servinfo; tmp != NULL; tmp = tmp->ai_next) {
@@ -189,7 +192,7 @@ int run_ping(t_ping *ping) {
     sleep(1);
     gettimeofday(&ping->tv, NULL);
     if (ping->send(ping)) {
-      perror("Error sendto");
+      perror("ft_ping: error sendto");
       ping->close(ping);
       break;
     }
