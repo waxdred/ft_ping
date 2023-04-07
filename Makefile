@@ -16,13 +16,15 @@ MK = Makefile
 
 DIR_HDS				=	includes
 
-RELATIVE_HDS		=	ping.h
+RELATIVE_HDS		=	ping.h \
+						stat.h
 
 # Code
 
 DIR_GLOBAL						=	srcs
 SRC_GLOBAL						=	main.c				\
-									ft_ping.c
+									ft_ping.c			\
+									stat.c
 
 ################################################################################
 ##                       Compilation Environnement                            ##

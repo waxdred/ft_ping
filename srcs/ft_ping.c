@@ -1,10 +1,13 @@
 #include "../includes/ping.h"
+#include <errno.h>
+#include <netinet/ip.h>
+#include <stdio.h>
+#include <sys/_types/_timeval.h>
+#include <time.h>
 
 int signalStop;
 
-static void handle_signal() {
-  signalStop = 0;
-}
+static void handle_signal() { signalStop = 0; }
 static void help() {
   printf("ft_ping help");
   printf("\n");
@@ -16,26 +19,18 @@ static void freePing(t_ping *ping) {
   free(ping);
 }
 
-static unsigned short calculate_checksum(unsigned short *paddress, int len) {
-  int nleft = len;
-  int sum = 0;
-  unsigned short *w = paddress;
-  unsigned short answer = 0;
+static unsigned short calculate_checksum(void *addr, size_t count) {
+  unsigned short *ptr;
+  unsigned long sum;
 
-  while (nleft > 1) {
-    sum += *w++;
-    nleft -= 2;
-  }
-
-  if (nleft == 1) {
-    *(unsigned char *)(&answer) = *(unsigned char *)w;
-    sum += answer;
-  }
-
-  sum = (sum >> 16) + (sum & 0xFFFF);
-  sum += (sum >> 16);
-  answer = ~sum;
-  return answer;
+  ptr = addr;
+  for (sum = 0; count > 1; count -= 2)
+    sum += *ptr++;
+  if (count > 0)
+    sum += *(unsigned char *)ptr;
+  while (sum >> 16)
+    sum = (sum & 0xffff) + (sum >> 16);
+  return (~sum);
 }
 
 static int parse(t_ping *ping, int ac, char **av) {
@@ -64,104 +59,132 @@ static int ft_send(t_ping *ping) {
   if (sendto(ping->sockfd, ping->packet, ping->pacetSize, 0,
              (struct sockaddr *)&ping->dest_addr,
              sizeof(ping->dest_addr)) < 0) {
-    perror("Error sendto");
+    fprintf(stderr, "Error sending packet: %s\n", strerror(errno));
     return EXIT_FAILURE;
   }
   ping->seq++;
   return EXIT_SUCCESS;
 }
 
-static int ft_receive(t_ping *ping) {
+static int ft_receive(t_ping *ping, struct timeval dev) {
   int ret = 0;
   char buf[1024];
+  struct timeval end;
   struct sockaddr_in from;
   socklen_t fromlen = sizeof(from);
 
+  bzero(buf, 1024);
   ret = recvfrom(ping->sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&from,
                  &fromlen);
   if (ret < 0) {
     return EXIT_FAILURE;
   }
-
-  printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=0.%.1ld ms\n", 
-            ret,ping->hostname, ping->ip, ping->seq, ping->ttl, ping->tv.tv_usec / 1000);
+  gettimeofday(&end, NULL);
+  double data = (double)(end.tv_usec - ping->tv.tv_usec) / 1000;
+  double stddev = (double)(end.tv_usec - dev.tv_usec) / 1000;
+  struct ip *ip = (struct ip *)buf;
+  printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n",
+         ip->ip_len, ping->hostname, ping->ip, ping->seq, ip->ip_ttl, data);
   ping->seqRecv++;
+  ping->stat.insert(&ping->stat, data, DATA);
+  ping->stat.insert(&ping->stat, stddev, DEV);
   return EXIT_SUCCESS;
 }
 
-static void fill_seq_icmp(t_ping *ping){
+static void fill_seq_icmp(t_ping *ping) {
   ping->icmp_header->icmp_type = ICMP_ECHO;
   ping->icmp_header->icmp_code = 0;
-  ping->icmp_header->icmp_cksum = 0;
   ping->icmp_header->icmp_id = getpid() & 0xFFFF;
   ping->icmp_header->icmp_seq = htons(ping->seq);
+  memset(ping->icmp_header->icmp_data, '*', ping->pacetSize); // Données
+  ping->icmp_header->icmp_cksum = 0;
   ping->icmp_header->icmp_cksum =
       calculate_checksum((unsigned short *)ping->icmp_header, ping->pacetSize);
 }
 
 static int openSocket(t_ping *ping) {
-    // need check packet size default at 56
+  // need check packet size default at 56
   struct timeval timeout = {5, 0};
   socklen_t len = sizeof(timeout);
   ping->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   if (ping->sockfd == -1) {
-    perror("Error socket");
+    fprintf(stderr, "Error creation socket: %s\n", strerror(errno));
     return EXIT_FAILURE;
   }
   ping->pacetSize = sizeof(struct icmp) + sizeof(struct timeval);
   ping->packet = (char *)malloc(ping->pacetSize);
   if (!ping->packet) {
-    perror("Error malloc");
+    fprintf(stderr, "Error allocation: %s\n", strerror(errno));
     return 2;
   }
+  memset(ping->packet, 0, sizeof(struct icmp));
   ping->alloc = 1;
-  if (ping->getname(ping)){
-      return EXIT_FAILURE;
+  if (ping->getname(ping)) {
+    fprintf(stderr, "Error get adress ip: %s\n", strerror(errno));
+    return EXIT_FAILURE;
   }
-  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, len) < 0){
-      perror("Error getsockopt");
-      return EXIT_FAILURE;
+  // set time out for receive
+  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, len) < 0) {
+    fprintf(stderr, "Error set setsockopt: %s\n", strerror(errno));
+    return EXIT_FAILURE;
   }
-  ping->icmp_header = (struct icmp *)ping->packet;
   ping->dest_addr.sin_family = AF_INET;
   ping->dest_addr.sin_addr.s_addr = inet_addr(ping->ip);
+  ping->icmp_header = (struct icmp *)ping->packet;
+  ping->icmp_header->icmp_id = getpid() & 0xFFFF;
+  ping->header(ping);
   return EXIT_SUCCESS;
 }
 
-static void closePing(t_ping *ping){
-    printf("--- %s ping statistics ---\n", ping->hostname);
-    printf("%d packets transmitted, %d packets receive, %.f%% packet loss, time %.1ldms\n", ping->seq, ping->seqRecv, 0.0, ping->start.tv_usec / 100);
-    ping->free(ping);
-    close(ping->sockfd);
+static double getPourcente(t_ping *ping) {
+  double ret = ping->seq - ping->seqRecv;
+  return ((ret / ping->seq) * 100 / 100);
 }
 
-static int host_to_ip(t_ping *ping){
-    char host[100];
-    struct addrinfo hint;
-    struct addrinfo *servinfo, *tmp;
-    bzero(&hint, sizeof(hint));
-    hint.ai_family = AF_INET;
-    
-    int recv = getaddrinfo(ping->hostname, NULL, &hint, &servinfo);
-    if (recv < 0){
-        perror("Error getaddrinfo");
-        return EXIT_FAILURE;
-    }
-    for (tmp = servinfo; tmp != NULL; tmp = tmp->ai_next){
-        getnameinfo(tmp->ai_addr, tmp->ai_addrlen, host, sizeof(host), NULL, 0, NI_NUMERICHOST);
-        strcpy(ping->ip, host);
-    }
-    return EXIT_SUCCESS;
+static void closePing(t_ping *ping) {
+  struct timeval end;
+  gettimeofday(&end, NULL);
+  printf("--- %s ping statistics ---\n", ping->hostname);
+  printf(
+      "%d packets transmitted, %d packets receive, %.2lf%% packet loss, time "
+      "%.3lfms\n",
+      ping->seq, ping->seqRecv, getPourcente(ping),
+      (double)(end.tv_usec - ping->start.tv_usec) / 1000);
+  printf("round-trip min/avg/max/stddev = %.2lf/%.2lf/%.2lf/%.2lf\n",
+         ping->stat.min(&ping->stat, DATA), ping->stat.avg(&ping->stat, DATA),
+         ping->stat.max(&ping->stat, DATA), ping->stat.avg(&ping->stat, DEV));
+  ping->stat.free(&ping->stat);
+  ping->free(ping);
+  close(ping->sockfd);
 }
 
+static int host_to_ip(t_ping *ping) {
+  char host[100];
+  struct addrinfo hint;
+  struct addrinfo *servinfo, *tmp;
+  bzero(&hint, sizeof(hint));
+  hint.ai_family = AF_INET;
 
-int run_ping(t_ping *ping){
+  int recv = getaddrinfo(ping->hostname, NULL, &hint, &servinfo);
+  if (recv < 0) {
+    perror("Error getaddrinfo");
+    return EXIT_FAILURE;
+  }
+  for (tmp = servinfo; tmp != NULL; tmp = tmp->ai_next) {
+    getnameinfo(tmp->ai_addr, tmp->ai_addrlen, host, sizeof(host), NULL, 0,
+                NI_NUMERICHOST);
+    strcpy(ping->ip, host);
+  }
+  return EXIT_SUCCESS;
+}
+
+int run_ping(t_ping *ping) {
+  struct timeval dev;
   signalStop = 1;
   signal(SIGINT, handle_signal);
 
-  printf("PING %s (%s): %d data bytes\n", ping->hostname,
-         ping->ip, ping->pacetSize);
-
+  printf("PING %s (%s): %d data bytes\n", ping->hostname, ping->ip,
+         ping->pacetSize);
   gettimeofday(&ping->start, NULL);
   while (signalStop) {
     sleep(1);
@@ -171,7 +194,8 @@ int run_ping(t_ping *ping){
       ping->close(ping);
       break;
     }
-    ping->receive(ping);
+    gettimeofday(&dev, NULL);
+    ping->receive(ping, dev);
   }
   ping->close(ping);
   return EXIT_SUCCESS;
@@ -183,6 +207,7 @@ t_ping *initPing() {
   if (ping == NULL)
     return NULL;
   bzero(ping, sizeof(t_ping));
+  initStat(&ping->stat);
   ping->help = &help;
   ping->free = &freePing;
   ping->parse = &parse;
