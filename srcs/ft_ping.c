@@ -136,6 +136,8 @@ static int openSocket(t_ping *ping) {
 }
 
 static double getPourcente(t_ping *ping) {
+  if (ping->seqRecv == 0)
+    return 100;
   double ret = ping->seq - ping->seqRecv;
   return ((ret / ping->seq) * 100 / 100);
 }
