@@ -1,4 +1,4 @@
-# ft_ping
+# ft_ping 42
 ft_ping est une implémentation du programme de commande ping sous Linux, permettant de tester la connectivité entre deux hôtes en envoyant des paquets ICMP ECHO_REQUEST et en écoutant les réponses.
 ## Table
 - [Installation](#Installation)
