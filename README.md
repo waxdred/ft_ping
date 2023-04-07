@@ -43,7 +43,8 @@ Pour implémenter cette fonctionnalité, le programme utilise plusieurs fonction
 - ```setsockopt```: configure le socket avec différentes options, telles que le temps d'attente avant expiration d'une requête ou le TTL (Time To Live) du paquet.
 - ```sendto```: envoie des paquets de données sur le réseau.
 - ```recvfrom```: reçoit des paquets de données du réseau.
-- Ces fonctions sont utilisées pour envoyer des paquets ICMP Echo Request et recevoir des paquets ICMP Echo Reply en réponse. Le programme ping mesure ensuite le temps de réponse entre l'envoi et la réception du paquet, et affiche des statistiques telles que le nombre de paquets envoyés et reçus, le temps minimum, moyen et maximum de réponse, et le pourcentage de paquets perdus.
+
+Ces fonctions sont utilisées pour envoyer des paquets ICMP Echo Request et recevoir des paquets ICMP Echo Reply en réponse. Le programme ping mesure ensuite le temps de réponse entre l'envoi et la réception du paquet, et affiche des statistiques telles que le nombre de paquets envoyés et reçus, le temps minimum, moyen et maximum de réponse, et le pourcentage de paquets perdus.
 
 # Documentions
 
