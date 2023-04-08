@@ -185,12 +185,7 @@ static int host_to_ip(t_ping *ping) {
                 NI_NUMERICHOST);
     strcpy(ping->ip, host);
   }
-  while (servinfo != NULL) {
-    tmp = servinfo;
-    servinfo = servinfo->ai_next;
-    free(tmp->ai_addr);
-    free(tmp);
-  }
+  freeaddrinfo(servinfo);
   return EXIT_SUCCESS;
 }
 
