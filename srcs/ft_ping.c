@@ -1,4 +1,5 @@
 #include "../includes/ping.h"
+#include <stdio.h>
 
 int signalStop;
 
@@ -10,6 +11,7 @@ static void help(char *s) {
 static void freePing(t_ping *ping) {
   if (ping->alloc == 1)
     free(ping->packet);
+  close(ping->sockfd);
   free(ping);
 }
 
@@ -71,6 +73,7 @@ static int ft_receive(t_ping *ping, struct timeval dev) {
   ret = recvfrom(ping->sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&from,
                  &fromlen);
   if (ret < 0) {
+    printf("Request timeout for imcp_seq %d\n", ping->seq);
     return EXIT_FAILURE;
   }
   gettimeofday(&end, NULL);
@@ -147,13 +150,15 @@ static void closePing(t_ping *ping) {
   gettimeofday(&end, NULL);
   printf("--- %s ping statistics ---\n", ping->hostname);
   printf(
-      "%d packets transmitted, %d packets receive, %.2lf%% packet loss, time "
+      "%d packets transmitted, %d packets receive, %.1lf%% packet loss, time "
       "%.3lfms\n",
       ping->seq, ping->seqRecv, getPourcente(ping),
       (double)(end.tv_usec - ping->start.tv_usec) / 1000);
-  printf("round-trip min/avg/max/stddev = %.2lf/%.2lf/%.2lf/%.2lf\n",
-         ping->stat.min(&ping->stat, DATA), ping->stat.avg(&ping->stat, DATA),
-         ping->stat.max(&ping->stat, DATA), ping->stat.avg(&ping->stat, DEV));
+  if (ping->seqRecv != 0) {
+    printf("round-trip min/avg/max/stddev = %.2lf/%.2lf/%.2lf/%.2lf\n",
+           ping->stat.min(&ping->stat, DATA), ping->stat.avg(&ping->stat, DATA),
+           ping->stat.max(&ping->stat, DATA), ping->stat.avg(&ping->stat, DEV));
+  }
   ping->stat.free(&ping->stat);
   ping->free(ping);
   close(ping->sockfd);
@@ -179,6 +184,12 @@ static int host_to_ip(t_ping *ping) {
     getnameinfo(tmp->ai_addr, tmp->ai_addrlen, host, sizeof(host), NULL, 0,
                 NI_NUMERICHOST);
     strcpy(ping->ip, host);
+  }
+  while (servinfo != NULL) {
+    tmp = servinfo;
+    servinfo = servinfo->ai_next;
+    free(tmp->ai_addr);
+    free(tmp);
   }
   return EXIT_SUCCESS;
 }
@@ -223,6 +234,6 @@ t_ping *initPing() {
   ping->getname = &host_to_ip;
   ping->run = &run_ping;
   ping->header = fill_seq_icmp;
-  ping->ttl = 64;
+  ping->ttl = 1;
   return (ping);
 }
