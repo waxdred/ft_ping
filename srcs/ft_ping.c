@@ -173,7 +173,7 @@ static int host_to_ip(t_ping *ping) {
 
   int recv = getaddrinfo(ping->hostname, NULL, &hint, &servinfo);
   if (recv < 0) {
-    perror("ft_ping: error getaddrinfo");
+    fprintf(stderr, "ft_ping: error getaddrinfo\n");
     return EXIT_FAILURE;
   } else if (servinfo == NULL) {
     fprintf(stderr, "ft_ping: cannot resolve: %s: Unknown host\n",
@@ -201,7 +201,7 @@ int run_ping(t_ping *ping) {
     sleep(1);
     gettimeofday(&ping->tv, NULL);
     if (ping->send(ping)) {
-      perror("ft_ping: error sendto");
+      fprintf(stderr, "ft_ping: error sendto\n");
       ping->close(ping);
       break;
     }
