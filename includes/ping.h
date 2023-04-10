@@ -16,8 +16,22 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+typedef struct s_check{
+    int8_t ok;
+    int value;
+}t_check;
+
+typedef struct s_flag{
+    t_check verbose;
+    t_check timeout;
+    t_check count;
+    t_check ttl;
+
+}t_flag;
+
 typedef struct s_ping {
   t_stat stat;
+  t_flag flag;
 
   char *hostname;
   char *packet;
@@ -28,8 +42,11 @@ typedef struct s_ping {
   int seqRecv;
   int sockfd;
   int ttl;
-  int verose;
+
+  int cont;
   uint16_t seq;
+  
+  struct timeval timeout;
 
   struct icmp *icmp_header;
   struct sockaddr_in dest_addr;

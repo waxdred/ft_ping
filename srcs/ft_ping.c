@@ -31,18 +31,46 @@ static unsigned short calculate_checksum(void *addr, size_t count) {
 
 static int parse(t_ping *ping, int ac, char **av) {
   int opt = 0;
-  while ((opt = getopt(ac, av, "hv")) != -1) {
+  int i = 1;
+  while ((opt = getopt(ac, av, "hvtcW")) != -1) {
     switch (opt) {
     case 'h':
       ping->help(av[0]);
       break;
     case 'v':
-      ping->verose = 1;
+      ping->flag.verbose.ok = 0;
       break;
+    case 't':
+      ping->flag.ttl.ok = 0;
+      ping->flag.ttl.value = atoi(av[i+1]);
+      if (ping->flag.ttl.value == 0){
+        fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
+        return EXIT_FAILURE;
+      }
+      ping->ttl = ping->flag.ttl.value;
+      break;
+    case 'c':
+      ping->flag.count.ok = 0;
+      ping->flag.count.value = atoi(av[i+1]);
+      if (ping->flag.count.value == 0){
+        fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
+        return EXIT_FAILURE;
+      }
+      break;
+    case 'W':
+      ping->flag.timeout.ok = 0;
+      ping->flag.timeout.value = atoi(av[i+1]);
+      if (ping->flag.timeout.value < 0){
+        fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
+        return EXIT_FAILURE;
+      }
+      break;
+      ping->timeout = (struct timeval){ping->flag.timeout.value, 0};
     }
+    ++i;
   }
-  if (optind < ac) {
-    ping->hostname = av[optind];
+  if (i < ac) {
+    ping->hostname = av[i + 1];
   } else {
     fprintf(stderr, "ft_ping: Usage: %s, [-h] [-v] ip_adress\n", av[0]);
     return EXIT_FAILURE;
@@ -79,9 +107,9 @@ static int ft_receive(t_ping *ping, struct timeval dev) {
   gettimeofday(&end, NULL);
   double data = (double)(end.tv_usec - ping->tv.tv_usec) / 1000;
   double stddev = (double)(end.tv_usec - dev.tv_usec) / 1000;
-  struct ip *ip = (struct ip *)buf;
+  struct iphdr *ip = (struct iphdr *)buf;
   printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n",
-         ip->ip_len, ping->hostname, ping->ip, ping->seq, ip->ip_ttl, data);
+         ret, ping->hostname, ping->ip, ping->seq, ip->ttl, data);
   ping->seqRecv++;
   ping->stat.insert(&ping->stat, data, DATA);
   ping->stat.insert(&ping->stat, stddev, DEV);
@@ -100,8 +128,7 @@ static void fill_seq_icmp(t_ping *ping) {
 }
 
 static int openSocket(t_ping *ping) {
-  struct timeval timeout = {1, 0};
-  socklen_t len = sizeof(timeout);
+  socklen_t len = sizeof(ping->timeout);
   ping->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   if (ping->sockfd == -1) {
     fprintf(stderr, "ft_ping: error creation socket: %s\n", strerror(errno));
@@ -119,7 +146,7 @@ static int openSocket(t_ping *ping) {
     return EXIT_FAILURE;
   }
   // set time out for receive
-  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, len) < 0) {
+  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout, len) < 0) {
     fprintf(stderr, "ft_ping: error set setsockopt timeout: %s\n",
             strerror(errno));
     return EXIT_FAILURE;
@@ -197,8 +224,12 @@ int run_ping(t_ping *ping) {
   printf("PING %s (%s): %d data bytes\n", ping->hostname, ping->ip,
          ping->packetSize);
   gettimeofday(&ping->start, NULL);
+  int i = 0;
   while (signalStop) {
-    sleep(1);
+    if (ping->flag.count.ok == 0 && ping->flag.count.value == i){
+      break;
+    }
+    usleep(1000000);
     gettimeofday(&ping->tv, NULL);
     if (ping->send(ping)) {
       fprintf(stderr, "ft_ping: error sendto\n");
@@ -207,7 +238,9 @@ int run_ping(t_ping *ping) {
     }
     gettimeofday(&dev, NULL);
     ping->receive(ping, dev);
+    i++;
   }
+  usleep(1000);
   ping->close(ping);
   return EXIT_SUCCESS;
 }
@@ -219,6 +252,7 @@ t_ping *initPing() {
     return NULL;
   bzero(ping, sizeof(t_ping));
   initStat(&ping->stat);
+  memset(&ping->flag, -1, sizeof(t_flag));
   ping->help = &help;
   ping->free = &freePing;
   ping->parse = &parse;
@@ -229,6 +263,7 @@ t_ping *initPing() {
   ping->getname = &host_to_ip;
   ping->run = &run_ping;
   ping->header = fill_seq_icmp;
-  ping->ttl = 1;
+  ping->ttl = 64;
+  ping->timeout = (struct timeval){1, 0};
   return (ping);
 }
