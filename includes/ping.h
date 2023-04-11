@@ -15,19 +15,26 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
+#if defined(__APPLE__)
+#define __OS__ 0
+#else
+#define __OS__ 1
+#endif
 
-typedef struct s_check{
-    int8_t ok;
-    int value;
-}t_check;
+typedef struct s_check {
+  int8_t ok;
+  int value;
+} t_check;
 
-typedef struct s_flag{
-    t_check verbose;
-    t_check timeout;
-    t_check count;
-    t_check ttl;
+typedef struct s_flag {
+  t_check verbose;
+  t_check timeout;
+  t_check count;
+  t_check ttl;
+  t_check silence;
+  t_check runtime;
 
-}t_flag;
+} t_flag;
 
 typedef struct s_ping {
   t_stat stat;
@@ -45,12 +52,13 @@ typedef struct s_ping {
 
   int cont;
   uint16_t seq;
-  
+
   struct timeval timeout;
 
   struct icmp *icmp_header;
   struct sockaddr_in dest_addr;
   struct timeval start;
+  struct timeval runtime;
   struct timeval tv;
 
   void (*close)(struct s_ping *ping);

@@ -1,11 +1,56 @@
 #include "../includes/ping.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/appleapiopts.h>
 
 int signalStop;
 
+int ft_getopt(char *av, char *flag) {
+  int opt;
+  const char *optchar;
+
+  if (av[0] != '-')
+    return -1;
+  opt = av[1];
+  optchar = strchr(flag, opt);
+  if (optchar == NULL) {
+    return '?';
+  }
+  return opt;
+}
+
 static void handle_signal() { signalStop = 0; }
 static void help(char *s) {
-  fprintf(stderr, "Usage: %s, [-h] [-v] ip_adress\n", s);
+  char msg[] =
+      "ft_ping [-h help] [-c count] [-t ttl] [-v verbose] [-W timeout] [-w "
+      "deadline]"
+      "[-w deadline] [-q silence]\n\n"
+      "OPTIONS\n\n\t"
+      "-c count\n\t\tS'arrêter après l'envoi de nombre paquets "
+      "ECHO_REQUEST.\n\t\t"
+      "Combiné"
+      "à l'option  -w deadline,  ping  doit recevoir ses nombre paquets "
+      "ECHO_REPLY\n\t\t"
+      "avant que la temporisation n'expire.\n\n\t"
+      "-t ttl\n\t\tSpécifie le champ IP « Time to Live ».\n\n\t"
+      "-v verbose\n\t\tSortie verbeuse.\n\n\t"
+      "-W deadline \n\t\tFixe un délai (en secondes),  avant que  ping ne "
+      "mette fin à son"
+      "exécution\n\t\tquel que soit le nombre de paquets envoyés ou reçus.Note "
+      ": "
+      "ici,"
+      "ping ne s 'arrêtera pas  après l' envoi de quelques paquets,\n\t\t"
+      "mais attendra que le délai expire ou que nombre sondes aient reçu une"
+      "réponse(NdT: si combiné à - c),\n\t\t"
+      "ou encore qu'une notification d'erreur provienne du réseau. \n\n\t"
+      "-w timeout \n\t\tTemps d'attente d'une réponse (en secondes) (NdT : "
+      "\n\n\t"
+      "-q silence \n\t\tSortie silencieuse. Rien n'est affiché sauf les lignes "
+      "\n\t\t"
+      "de résumé"
+      "au démarrage et à la fin de l'exécution. "
+      "?)\n\n\t";
+  fprintf(stderr, "Usage: sudo %s ip_adress\n\n%s", s, msg);
 }
 
 static void freePing(t_ping *ping) {
@@ -32,47 +77,70 @@ static unsigned short calculate_checksum(void *addr, size_t count) {
 static int parse(t_ping *ping, int ac, char **av) {
   int opt = 0;
   int i = 1;
-  while ((opt = getopt(ac, av, "hvtcW")) != -1) {
+  while ((opt = ft_getopt(av[i], "hvtcWqw")) != -1) {
     switch (opt) {
     case 'h':
       ping->help(av[0]);
+      exit(0);
       break;
     case 'v':
       ping->flag.verbose.ok = 0;
       break;
+    case 'q':
+      ping->flag.silence.ok = 0;
+      break;
     case 't':
       ping->flag.ttl.ok = 0;
-      ping->flag.ttl.value = atoi(av[i+1]);
-      if (ping->flag.ttl.value == 0){
+      ping->flag.ttl.value = atoi(av[i + 1]);
+      if (ping->flag.ttl.value <= 0) {
         fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
         return EXIT_FAILURE;
       }
+      ++i;
       ping->ttl = ping->flag.ttl.value;
+      break;
+    case 'w':
+      ping->flag.runtime.ok = 0;
+      ping->flag.runtime.value = atoi(av[i + 1]);
+      if (ping->flag.runtime.value <= 0) {
+        fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
+        return EXIT_FAILURE;
+      }
+      gettimeofday(&ping->runtime, NULL);
+      ++i;
       break;
     case 'c':
       ping->flag.count.ok = 0;
-      ping->flag.count.value = atoi(av[i+1]);
-      if (ping->flag.count.value == 0){
+      ping->flag.count.value = atoi(av[i + 1]);
+      if (ping->flag.count.value <= 0) {
         fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
         return EXIT_FAILURE;
       }
+      ++i;
       break;
     case 'W':
       ping->flag.timeout.ok = 0;
-      ping->flag.timeout.value = atoi(av[i+1]);
-      if (ping->flag.timeout.value < 0){
+      ping->flag.timeout.value = atoi(av[i + 1]);
+      if (ping->flag.timeout.value <= 0) {
         fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
         return EXIT_FAILURE;
       }
+      ++i;
       break;
       ping->timeout = (struct timeval){ping->flag.timeout.value, 0};
+    case '?':
+      fprintf(stderr, "Unknown option `-%c'.\n", av[i][1]);
+      return EXIT_FAILURE;
     }
     ++i;
   }
   if (i < ac) {
-    ping->hostname = av[i + 1];
+    ping->hostname = av[i];
   } else {
-    fprintf(stderr, "ft_ping: Usage: %s, [-h] [-v] ip_adress\n", av[0]);
+    fprintf(
+        stderr,
+        "ft_ping: Usage: %s, [-h] [-v] [-t] [-c] [-W] [-q] [-w] ip_adress\n",
+        av[0]);
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
@@ -107,9 +175,17 @@ static int ft_receive(t_ping *ping, struct timeval dev) {
   gettimeofday(&end, NULL);
   double data = (double)(end.tv_usec - ping->tv.tv_usec) / 1000;
   double stddev = (double)(end.tv_usec - dev.tv_usec) / 1000;
-  struct iphdr *ip = (struct iphdr *)buf;
-  printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n",
-         ret, ping->hostname, ping->ip, ping->seq, ip->ttl, data);
+  if (ping->flag.silence.ok == -1) {
+#ifdef __OS__
+    struct ip *ip = (struct ip *)buf;
+    printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n", ret,
+           ping->hostname, ping->ip, ping->seq, ip->ip_ttl, data);
+#else
+    struct iphdr *ip = (struct iphdr *)buf;
+    printf("%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n", ret,
+           ping->hostname, ping->ip, ping->seq, ip->ttl, data);
+#endif
+  }
   ping->seqRecv++;
   ping->stat.insert(&ping->stat, data, DATA);
   ping->stat.insert(&ping->stat, stddev, DEV);
@@ -146,7 +222,8 @@ static int openSocket(t_ping *ping) {
     return EXIT_FAILURE;
   }
   // set time out for receive
-  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout, len) < 0) {
+  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout, len) <
+      0) {
     fprintf(stderr, "ft_ping: error set setsockopt timeout: %s\n",
             strerror(errno));
     return EXIT_FAILURE;
@@ -215,6 +292,24 @@ static int host_to_ip(t_ping *ping) {
   freeaddrinfo(servinfo);
   return EXIT_SUCCESS;
 }
+static int8_t cmptv(struct timeval tv1, struct timeval tv2, int sec) {
+  time_t t1 = tv1.tv_sec;
+  time_t t2 = tv2.tv_sec;
+  suseconds_t usec1 = tv1.tv_usec;
+  suseconds_t usec2 = tv2.tv_usec;
+
+  printf("ok");
+  if (t1 + sec > t2) {
+    return EXIT_FAILURE;
+  } else if (t1 + sec < t2) {
+    return EXIT_SUCCESS;
+  } else {
+    if (usec1 > usec2)
+      return EXIT_SUCCESS;
+    else
+      return EXIT_FAILURE;
+  }
+}
 
 int run_ping(t_ping *ping) {
   struct timeval dev;
@@ -224,13 +319,17 @@ int run_ping(t_ping *ping) {
   printf("PING %s (%s): %d data bytes\n", ping->hostname, ping->ip,
          ping->packetSize);
   gettimeofday(&ping->start, NULL);
-  int i = 0;
   while (signalStop) {
-    if (ping->flag.count.ok == 0 && ping->flag.count.value == i){
+    if (!ping->flag.count.ok && ping->flag.count.value == ping->seqRecv) {
       break;
     }
     usleep(1000000);
     gettimeofday(&ping->tv, NULL);
+    if (!ping->flag.count.ok && ping->flag.count.value == ping->seqRecv) {
+      if (!ping->flag.runtime.ok &&
+          !cmptv(ping->runtime, ping->tv, ping->flag.runtime.value))
+        break;
+    }
     if (ping->send(ping)) {
       fprintf(stderr, "ft_ping: error sendto\n");
       ping->close(ping);
@@ -238,7 +337,6 @@ int run_ping(t_ping *ping) {
     }
     gettimeofday(&dev, NULL);
     ping->receive(ping, dev);
-    i++;
   }
   usleep(1000);
   ping->close(ping);
