@@ -1,5 +1,6 @@
 #ifndef FT_PING
 #define FT_PING
+#include "../libft/include/libft.h"
 #include "./stat.h"
 #include <arpa/inet.h>
 #include <errno.h>

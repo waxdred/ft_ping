@@ -12,7 +12,7 @@ int ft_getopt(char *av, char *flag) {
   if (av[0] != '-')
     return -1;
   opt = av[1];
-  optchar = strchr(flag, opt);
+  optchar = ft_strchr(flag, opt);
   if (optchar == NULL) {
     return '?';
   }
@@ -20,6 +20,7 @@ int ft_getopt(char *av, char *flag) {
 }
 
 static void handle_signal() { signalStop = 0; }
+
 static void help(char *s) {
   char msg[] =
       "ft_ping [-h help] [-c count] [-t ttl] [-v verbose] [-W timeout] [-w "
@@ -91,7 +92,7 @@ static int parse(t_ping *ping, int ac, char **av) {
       break;
     case 't':
       ping->flag.ttl.ok = 0;
-      ping->flag.ttl.value = atoi(av[i + 1]);
+      ping->flag.ttl.value = ft_atoi(av[i + 1]);
       if (ping->flag.ttl.value <= 0) {
         fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
         return EXIT_FAILURE;
@@ -101,7 +102,7 @@ static int parse(t_ping *ping, int ac, char **av) {
       break;
     case 'w':
       ping->flag.runtime.ok = 0;
-      ping->flag.runtime.value = atoi(av[i + 1]);
+      ping->flag.runtime.value = ft_atoi(av[i + 1]);
       if (ping->flag.runtime.value <= 0) {
         fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
         return EXIT_FAILURE;
@@ -111,7 +112,7 @@ static int parse(t_ping *ping, int ac, char **av) {
       break;
     case 'c':
       ping->flag.count.ok = 0;
-      ping->flag.count.value = atoi(av[i + 1]);
+      ping->flag.count.value = ft_atoi(av[i + 1]);
       if (ping->flag.count.value <= 0) {
         fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
         return EXIT_FAILURE;
@@ -120,7 +121,7 @@ static int parse(t_ping *ping, int ac, char **av) {
       break;
     case 'W':
       ping->flag.timeout.ok = 0;
-      ping->flag.timeout.value = atoi(av[i + 1]);
+      ping->flag.timeout.value = ft_atoi(av[i + 1]);
       if (ping->flag.timeout.value <= 0) {
         fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[i + 1]);
         return EXIT_FAILURE;
