@@ -55,7 +55,7 @@ SRCS		=	$(addprefix $(DIR_GLOBAL)/, $(SRC_GLOBAL))					\
 HDS			=	$(addprefix $(DIR_HDS)/, $(RELATIVE_HDS))
 OBJS		=	$(addprefix $(DIR_OBJ)/, $(SRCS:.c=.o))
 
-DEPENDS		=	$(HDS) $(MK) $(LIBFT_NAME) $(MLX)
+DEPENDS		=	$(HDS) $(MK) $(LIBFT_NAME)
 
 ################################################################################
 ##                                 Règles                                     ##
