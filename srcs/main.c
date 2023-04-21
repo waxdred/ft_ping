@@ -1,9 +1,9 @@
-#include "../includes/ping.h"
+#include "../includes/ft_ping.h"
 
 int main(int ac, char *av[]) {
   t_ping *ping;
 
-  ping = initPing();
+  ping = initPing(ac);
   if (ping == NULL)
     return EXIT_FAILURE;
   if (ac < 2) {

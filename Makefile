@@ -16,15 +16,24 @@ MK = Makefile
 
 DIR_HDS				=	includes
 
-RELATIVE_HDS		=	ping.h \
-						stat.h
+RELATIVE_HDS		=	ft_ping.h \
+						ft_stat.h
 
 # Code
 
 DIR_GLOBAL						=	srcs
 SRC_GLOBAL						=	main.c				\
-									ft_ping.c			\
-									stat.c
+									ft_openSocket.c     \
+									host.c     			\
+									ft_parsing.c  		\
+									ft_ping.c  			\
+									ft_ping_init.c    	\
+									ft_ping_tools.c  	\
+									ft_signal.c  		\
+									ft_stat.c 			\
+									ft_stat_tool.c  	\
+									help.c  			\
+									tools.c
 
 ################################################################################
 ##                       Compilation Environnement                            ##
@@ -34,15 +43,6 @@ NAME	=	ft_ping
 CC		=	cc
 CFLAGS	=	-Wall -Werror -Wextra -O3
 # -g3 -ggdb -fsanitize=address
-
-# Library
-
-LIBS = -Llibft -lft
-
-# libft
-
-DIR_LIBFT			= 	libft
-LIBFT_NAME			=	$(DIR_LIBFT)/libft.a
 
 # Sources
 
@@ -74,23 +74,17 @@ $(foreach dir,$(DIRS_SRC),$(eval $(call src2obj,$(dir), $(DEPENDS))))
 
 $(NAME)	: $(DEPENDS) $(OBJS)
 	@printf "\n[✅]\tCompilation of $(COLOR_PURPLE)$(NAME)\$(COLOR_NORM)\n"
-	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBS)
-
-$(LIBFT_NAME):
-	@printf "\n\tCompilation of $(COLOR_PURPLE)$(LIBFT_NAME)\$(COLOR_NORM)\n"
-	@make --quiet -C $(DIR_LIBFT)
+	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS)
 
 clean:
-	@make --quiet -C $(DIR_LIBFT) clean
 	@printf "[✅]\tDelete $(COLOR_RED)object of $(DIR_GLOBAL)$(COLOR_NORM) of $(NAME)\n"
 	@rm -rf $(DIR_OBJ)
 
 fclean: clean
-	@make --quiet -C $(DIR_LIBFT) fclean
 	@printf "[✅]\tDelete $(COLOR_RED)all binary on $(DIR_LIBFT)$(COLOR_NORM)\n"
 	@rm -rf $(NAME)
 
 send: fclean 
-	@scp -r ../ft_ping vm:/home/jmilhas/
+	@scp -r ../ft_ping vm:/home/jo/
 
 re:	fclean all
