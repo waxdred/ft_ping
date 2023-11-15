@@ -25,6 +25,8 @@ DIR_GLOBAL						=	srcs
 SRC_GLOBAL						=	main.c				\
 									ft_openSocket.c     \
 									host.c     			\
+									utils.c     			\
+									memory.c     			\
 									ft_parsing.c  		\
 									ft_ping.c  			\
 									ft_ping_init.c    	\
@@ -60,6 +62,8 @@ DEPENDS		=	$(HDS) $(MK) $(LIBFT_NAME)
 ################################################################################
 ##                                 Règles                                     ##
 ################################################################################
+
+.PHONY: all clean fclean re
 
 all		:	$(NAME)
 

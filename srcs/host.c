@@ -8,7 +8,7 @@ static void get_info(t_ping *ping, struct addrinfo *servinfo) {
   while (tmp != NULL) {
     getnameinfo(tmp->ai_addr, tmp->ai_addrlen, host, sizeof(host), NULL, 0,
                 NI_NUMERICHOST);
-    strcpy(ping->ip, host);
+    ft_strcpy(ping->ip, host);
     tmp = tmp->ai_next;
   }
   freeaddrinfo(servinfo);
@@ -19,7 +19,7 @@ int host_to_ip(t_ping *ping) {
   struct addrinfo hint;
   struct addrinfo *servinfo;
 
-  bzero(&hint, sizeof(hint));
+  ft_bzero(&hint, sizeof(hint));
   hint.ai_family = AF_INET;
   recv = getaddrinfo(ping->hostname, NULL, &hint, &servinfo);
   if (recv < 0) {

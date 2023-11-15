@@ -17,9 +17,9 @@ t_ping *initPing(int ac) {
 
   if (ping == NULL)
     return NULL;
-  bzero(ping, sizeof(t_ping));
+  ft_bzero(ping, sizeof(t_ping));
   initStat(&ping->stat);
-  memset(&ping->flag, -1, sizeof(t_flag));
+  ft_memset(&ping->flag, -1, sizeof(t_flag));
   set_func_ptr(ping);
   ping->header = fill_seq_icmp;
   ping->ttl = 64;

@@ -87,6 +87,7 @@ typedef struct s_ping {
 } t_ping;
 
 char *ft_strchr(const char *str, int c);
+char *ft_strcpy(const char *s1, char *dest);
 double getPourcente(t_ping *ping);
 int ft_atoi(const char *str);
 int ft_receive(t_ping *ping, struct timeval dev);
@@ -96,12 +97,14 @@ int openSocket(t_ping *ping);
 int parse(t_ping *ping, int ac, char **av);
 int run_ping(t_ping *ping);
 int8_t cmptv(struct timeval tv1, struct timeval tv2, int sec);
-t_ping *initPing(int ac);
 t_ping *get_ping(t_ping *ping);
+t_ping *initPing(int ac);
 unsigned short calculate_checksum(void *addr, size_t count);
+void *ft_memset(void *b, int c, size_t len);
 void closePing(t_ping *ping);
 void fill_seq_icmp(t_ping *ping);
 void freePing(t_ping *ping);
+void ft_bzero(void *s, size_t n);
 void handle_signal(int sig);
 void handler_alarm(int sig);
 void help(char *s);

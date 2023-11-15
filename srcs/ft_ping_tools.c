@@ -49,9 +49,9 @@ static void print_data(t_ping *ping, t_recv *r, struct timeval dev) {
 int ft_receive(t_ping *ping, struct timeval dev) {
   t_recv r;
 
-  bzero(&r, sizeof(t_recv));
+  ft_bzero(&r, sizeof(t_recv));
   r.fromlen = sizeof(r.from);
-  bzero(r.buf, 1024);
+  ft_bzero(r.buf, 1024);
   r.ret = recvfrom(ping->sockfd, r.buf, sizeof(r.buf), 0,
                    (struct sockaddr *)&r.from, &r.fromlen);
   if (r.ret < 0) {
