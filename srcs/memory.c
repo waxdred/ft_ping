@@ -33,13 +33,13 @@ int ft_strlen(const char *s) {
   return i;
 }
 
-char *ft_strcpy(const char *s1, char *dest) {
+char *ft_strcpy(char *dest, const char *src) {
   int i;
 
   i = 0;
-  while (*s1) {
-    dest[i] = *s1;
-    s1++;
+  while (src[i] != '\0') {
+    dest[i] = src[i];
+    i++;
   }
   return (dest);
 }

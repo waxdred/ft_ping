@@ -17,6 +17,24 @@ unsigned short calculate_checksum(void *addr, size_t count) {
   return (~sum);
 }
 
+void formatDataPacket(void *data, char *timestamp, char *seq, int size) {
+  int i = 0;
+  int len_stamp = strlen(timestamp);
+  int len_seq = strlen(seq);
+  unsigned char *ptr = (unsigned char *)data;
+
+  while (i < len_stamp && i < size) {
+    ptr[i] = timestamp[i];
+    i++;
+  }
+  ptr[i] = ' ';
+  i++;
+  while (i < len_stamp && i < size) {
+    ptr[i] = seq[i];
+    i++;
+  }
+}
+
 double getPourcente(t_ping *ping) {
   if (ping->seqRecv == 0)
     return 100;

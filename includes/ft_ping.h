@@ -8,6 +8,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +22,18 @@
 #else
 #define __OS__ 1
 #endif
+
+#ifdef DEBUG
+#define DEBUG_EXE 1
+#else
+#define DEBUG_EXE 0
+#endif
+
+#define ANSI_COLOR_RED "\x1b[31m"
+#define ANSI_COLOR_YELLOW "\x1b[33m"
+#define ANSI_COLOR_RESET "\x1b[0m"
+
+typedef void (*dprintf_func)(int, const char *, ...);
 
 typedef struct s_recv {
   int ret;
@@ -87,7 +100,7 @@ typedef struct s_ping {
 } t_ping;
 
 char *ft_strchr(const char *str, int c);
-char *ft_strcpy(const char *s1, char *dest);
+char *ft_strcpy(char *dest, const char *src);
 double getPourcente(t_ping *ping);
 int ft_atoi(const char *str);
 int ft_receive(t_ping *ping, struct timeval dev);
@@ -98,6 +111,7 @@ int parse(t_ping *ping, int ac, char **av);
 int run_ping(t_ping *ping);
 int8_t cmptv(struct timeval tv1, struct timeval tv2, int sec);
 t_ping *get_ping(t_ping *ping);
+double get_diff_tv(struct timeval tv_recv, struct timeval tv_send);
 t_ping *initPing(int ac);
 unsigned short calculate_checksum(void *addr, size_t count);
 void *ft_memset(void *b, int c, size_t len);
@@ -108,4 +122,5 @@ void ft_bzero(void *s, size_t n);
 void handle_signal(int sig);
 void handler_alarm(int sig);
 void help(char *s);
+void debug(dprintf_func func, int fd, const char *format, ...);
 #endif

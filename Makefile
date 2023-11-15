@@ -44,6 +44,11 @@ SRC_GLOBAL						=	main.c				\
 NAME	=	ft_ping
 CC		=	cc
 CFLAGS	=	-Wall -Werror -Wextra -O3
+DEBUG   ?= 0
+
+ifeq ($(DEBUG), 1)
+    CFLAGS += -D DEBUG
+endif
 # -g3 -ggdb -fsanitize=address
 
 # Sources

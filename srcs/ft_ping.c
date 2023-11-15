@@ -21,9 +21,9 @@ void closePing(t_ping *ping) {
 }
 
 void ft_process(t_ping *ping) {
-  struct timeval dev;
-
   while (ping->signal) {
+    struct timeval dev;
+    ft_bzero(&dev, sizeof(struct timeval));
     if (!ping->flag.count.ok && ping->flag.count.value == ping->seqRecv) {
       break;
     }
@@ -35,6 +35,7 @@ void ft_process(t_ping *ping) {
     }
     gettimeofday(&dev, NULL);
     ping->receive(ping, dev);
+    usleep(2000000);
   }
 }
 
