@@ -6,11 +6,8 @@ void closePing(t_ping *ping) {
 
   gettimeofday(&end, NULL);
   printf("--- %s ping statistics ---\n", ping->hostname);
-  printf(
-      "%d packets transmitted, %d packets receive, %.1lf%% packet loss, time "
-      "%.3lfms\n",
-      ping->seq, ping->seqRecv, getPourcente(ping),
-      (double)(end.tv_usec - ping->start.tv_usec) / 1000);
+  printf("%d packets transmitted, %d packets receive, %.1lf%% packet loss\n",
+         ping->seq, ping->seqRecv, getPourcente(ping));
   if (ping->seqRecv != 0) {
     printf("round-trip min/avg/max/stddev = %.2lf/%.2lf/%.2lf/%.2lf\n",
            ping->stat.min(&ping->stat, DATA), ping->stat.avg(&ping->stat, DATA),

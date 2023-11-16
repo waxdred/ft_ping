@@ -28,6 +28,7 @@ void fill_seq_icmp(t_ping *ping) {
 
 int ft_send(t_ping *ping) {
   struct timeval tv;
+  int ret;
   gettimeofday(&tv, NULL);
 
   ping->header(ping);
@@ -35,10 +36,13 @@ int ft_send(t_ping *ping) {
   if (DEBUG_EXE) {
     debug((dprintf_func)dprintf, 2, "Ping send: %d\n", ping->seq);
   }
-  if (sendto(ping->sockfd, ping->packet, ping->packetSize, 0,
-             (struct sockaddr *)&ping->dest_addr,
-             sizeof(ping->dest_addr)) < 0) {
-    fprintf(stderr, "ft_ping: error sending packet: %s\n", strerror(errno));
+  ret = sendto(ping->sockfd, ping->packet, ping->packetSize, 0,
+               (struct sockaddr *)&ping->dest_addr, sizeof(ping->dest_addr));
+  if (DEBUG_EXE) {
+    debug((dprintf_func)dprintf, 2, "Ret sendto: %d\n", ret);
+  }
+  if (ret < 0) {
+    fprintf(stderr, "ft_ping: sendto: %s\n", strerror(errno));
     return EXIT_FAILURE;
   }
   ping->seq++;
