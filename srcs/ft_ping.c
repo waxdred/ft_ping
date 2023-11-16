@@ -1,4 +1,5 @@
 #include "../includes/ft_ping.h"
+#include <stdio.h>
 
 void closePing(t_ping *ping) {
   struct timeval end;
@@ -21,6 +22,10 @@ void closePing(t_ping *ping) {
 }
 
 void ft_process(t_ping *ping) {
+  if (DEBUG_EXE) {
+    debug((dprintf_func)dprintf, 2, "Run Process\n");
+  }
+
   while (ping->signal) {
     struct timeval dev;
     ft_bzero(&dev, sizeof(struct timeval));
@@ -28,6 +33,9 @@ void ft_process(t_ping *ping) {
       break;
     }
     gettimeofday(&ping->tv, NULL);
+    if (DEBUG_EXE) {
+      debug((dprintf_func)dprintf, 2, "Setting timeval dev: %d\n", dev.tv_usec);
+    }
     if (!ping->flag.count.ok && ping->flag.count.value == ping->seqRecv) {
       if (!ping->flag.runtime.ok &&
           !cmptv(ping->runtime, ping->tv, ping->flag.runtime.value))
