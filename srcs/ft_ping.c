@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_ping.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jmilhas <jmilhas@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/12/05 19:54:00 by jmilhas           #+#    #+#             */
+/*   Updated: 2023/12/05 21:58:57 by jmilhas          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/ft_ping.h"
 #include <stdio.h>
 
@@ -38,14 +50,15 @@ void ft_process(t_ping *ping) {
     gettimeofday(&ping->tv, NULL);
     if (DEBUG_EXE) {
       debug((dprintf_func)dprintf, 2, "Setting timeval dev: %d\n", dev.tv_usec);
+      debug((dprintf_func)dprintf, 2, "check W : %d\n", ping->flag.runtime.ok);
     }
-    if (!ping->flag.count.ok && ping->flag.count.value == ping->seqRecv) {
-      if (!ping->flag.runtime.ok &&
-          !cmptv(ping->runtime, ping->tv, ping->flag.runtime.value))
-        break;
-    }
+    if (!ping->flag.runtime.ok &&
+        !cmptv(ping->runtime, ping->tv, ping->flag.runtime.value))
+      break;
     gettimeofday(&dev, NULL);
-    ping->receive(ping, dev);
+    if (ping->receive(ping, dev)) {
+      break;
+    };
     usleep(2000000);
   }
 }

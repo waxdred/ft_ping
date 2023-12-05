@@ -28,8 +28,8 @@ static int ft_checkHQTW(t_ping *ping, int *i, char **av, char opt) {
     if (ping->flag.ttl.value <= 0) {
       fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i + 1]);
       return EXIT_FAILURE;
-    }else{
-        ping->ttl = ping->flag.ttl.value;
+    } else {
+      ping->ttl = ping->flag.ttl.value;
     }
     ++*i;
     ping->ttl = ping->flag.ttl.value;
@@ -41,7 +41,7 @@ static int ft_checkHQTW(t_ping *ping, int *i, char **av, char opt) {
       return EXIT_FAILURE;
     }
     gettimeofday(&ping->runtime, NULL);
-    ++i;
+    ++*i;
   }
   return EXIT_SUCCESS;
 }

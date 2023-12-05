@@ -55,6 +55,7 @@ typedef struct s_check {
 typedef struct s_flag {
   t_check verbose;
   t_check timeout;
+  t_check deadline;
   t_check count;
   t_check ttl;
   t_check silence;

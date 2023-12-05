@@ -1,26 +1,30 @@
 #include "../includes/ft_ping.h"
-#include <stdio.h>
-#include <stdlib.h>
 
-static int ft_setsockopt(t_ping *ping, socklen_t len) {
-  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout, len) ==
-      -1) {
+static int ft_setsockopt(t_ping *ping) {
+  ping->timeout.tv_sec = 0;
+  ping->timeout.tv_usec = 1;
+  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout,
+                 sizeof(ping->timeout)) < 0) {
     fprintf(stderr, "ft_ping: error set setsockopt timeout: %s\n",
             strerror(errno));
-    return EXIT_FAILURE;
+    goto error;
   }
   if (setsockopt(ping->sockfd, IPPROTO_IP, IP_TTL, &ping->ttl,
-                 sizeof(ping->ttl)) == -1) {
+                 sizeof(ping->ttl)) < 0) {
     fprintf(stderr, "ft_ping: error set setsockopt ttl: %s\n", strerror(errno));
-    return EXIT_FAILURE;
+    goto error;
   }
   return EXIT_SUCCESS;
+error:
+  close(ping->sockfd);
+  return EXIT_FAILURE;
 }
 
 static int ft_socket(t_ping *ping) {
   ping->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
   if (ping->sockfd == -1) {
     fprintf(stderr, "ft_ping: error creation socket: %s\n", strerror(errno));
+    close(ping->sockfd);
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
@@ -35,12 +39,8 @@ static void setaddr(t_ping *ping) {
 }
 
 int openSocket(t_ping *ping) {
-  socklen_t len;
-
-  len = sizeof(ping->timeout);
-
   if (ft_socket(ping))
-    return EXIT_FAILURE;
+    goto error;
   ping->packetSize = sizeof(struct icmp) + sizeof(struct timeval);
   ping->packet = (char *)malloc(ping->packetSize);
   if (!ping->packet) {
@@ -49,19 +49,22 @@ int openSocket(t_ping *ping) {
   }
   ft_memset(ping->packet, 0, sizeof(struct icmp));
   ping->alloc = 1;
-  if (ping->getname(ping)) {
-    return EXIT_FAILURE;
-  }
-  if (ft_setsockopt(ping, len))
-    return EXIT_FAILURE;
+  if (ping->getname(ping))
+    goto error;
+  if (ft_setsockopt(ping))
+    goto error;
   setaddr(ping);
   if (ping->flag.verbose.ok) {
     if (ping->dest_addr.sin_family == AF_INET) {
       dprintf(1, "ping: sock4.fd: %d (socktype: SOCK_RAW, family: %s)\n",
               ping->sockfd, "AF_INET");
+    } else {
       dprintf(1, "ping: sock6.fd: %d (socktype: SOCK_RAW, family: %s)\n",
               ping->sockfd, "AF_INET6");
     }
   }
   return EXIT_SUCCESS;
+error:
+  close(ping->sockfd);
+  return EXIT_FAILURE;
 };
