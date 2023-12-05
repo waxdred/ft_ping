@@ -17,24 +17,6 @@ unsigned short calculate_checksum(void *addr, size_t count) {
   return (~sum);
 }
 
-void formatDataPacket(void *data, char *timestamp, char *seq, int size) {
-  int i = 0;
-  int len_stamp = strlen(timestamp);
-  /* int len_seq = strlen(seq); */
-  unsigned char *ptr = (unsigned char *)data;
-
-  while (i < len_stamp && i < size) {
-    ptr[i] = timestamp[i];
-    i++;
-  }
-  ptr[i] = ' ';
-  i++;
-  while (i < len_stamp && i < size) {
-    ptr[i] = seq[i];
-    i++;
-  }
-}
-
 double getPourcente(t_ping *ping) {
   if (ping->seqRecv == 0)
     return 100;
@@ -103,11 +85,12 @@ char *ft_strchr(const char *str, int c) {
   return (NULL);
 }
 
-int ft_strcmp(const char *s1, const char *s2){
-    size_t i;
-    i =0 ;
-    while((unsigned char)s1[i] == (unsigned char)s2[i] && s1[i] != '\0' && s2[i] != '\0'){
-        i++;
-    }
-    return ((unsigned char)s1[i] - (unsigned char)s2[i]);
+int ft_strcmp(const char *s1, const char *s2) {
+  size_t i;
+  i = 0;
+  while ((unsigned char)s1[i] == (unsigned char)s2[i] && s1[i] != '\0' &&
+         s2[i] != '\0') {
+    i++;
+  }
+  return ((unsigned char)s1[i] - (unsigned char)s2[i]);
 }

@@ -69,6 +69,7 @@ typedef struct s_ping {
   char *packet;
   char ip[100];
 
+  int Error;
   int alloc;
   int ac;
   int packetSize;

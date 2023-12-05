@@ -13,8 +13,8 @@ static void get_info(t_ping *ping, struct addrinfo *servinfo) {
     getnameinfo(tmp->ai_addr, tmp->ai_addrlen, host, sizeof(host), NULL, 0,
                 NI_NUMERICHOST);
     ft_strcpy(ping->ip, host);
-    if (DEBUG_EXE){
-        debug((dprintf_func)dprintf, 2, "Read host: %s\n", host);
+    if (DEBUG_EXE) {
+      debug((dprintf_func)dprintf, 2, "Read host: %s\n", host);
     }
     tmp = tmp->ai_next;
   }
@@ -41,7 +41,7 @@ int host_to_ip(t_ping *ping) {
   return EXIT_SUCCESS;
 }
 
-int ft_cmp_address(t_ping *ping, t_recv *r){
+int ft_cmp_address(t_ping *ping, t_recv *r) {
   r->ipRcv = inet_ntoa(r->from.sin_addr);
-  return ft_strcmp(ping->ip, r->ipRcv); 
+  return ft_strcmp(ping->ip, r->ipRcv);
 }

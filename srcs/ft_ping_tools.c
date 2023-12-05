@@ -6,7 +6,7 @@
 /*   By: jmilhas <jmilhas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/05 09:45:47 by jmilhas           #+#    #+#             */
-/*   Updated: 2023/12/05 10:50:50 by jmilhas          ###   ########.fr       */
+/*   Updated: 2023/12/05 20:19:49 by jmilhas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ void fill_seq_icmp(t_ping *ping) {
   if (DEBUG_EXE) {
     debug((dprintf_func)dprintf, 2, "Packet size: %d\n", ping->packetSize);
   }
-  memcpy(ping->icmp_header->icmp_data, "12345678", ping->packetSize);
+  memcpy(ping->icmp_header->icmp_data, "********", ping->packetSize);
   ping->icmp_header->icmp_cksum = 0;
   ping->icmp_header->icmp_cksum =
       calculate_checksum((unsigned short *)ping->icmp_header, ping->packetSize);
@@ -57,6 +57,7 @@ int ft_send(t_ping *ping) {
   }
   if (ret < 0) {
     fprintf(stderr, "ft_ping: sendto: %s\n", strerror(errno));
+    ping->Error++;
     return EXIT_FAILURE;
   }
   ping->seq++;
@@ -72,15 +73,14 @@ static void print_data(t_ping *ping, t_recv *r, struct timeval dev) {
 #else
     struct iphdr *ip = (struct iphdr *)r->buf;
 #endif
-    if (r->ttsError == 0){
-    dprintf(1, "%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n",
-            r->ret, ping->hostname, r->ipRcv, ping->seq, ip->ip_ttl, r->data);
-    }else{
-    dprintf(1, "From _gateway (%s): icmp_seq=%d Time to live exceeded\n",
-             r->ipRcv, ping->seq);
+    if (r->ttsError == 0) {
+      dprintf(1, "%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n",
+              r->ret, ping->hostname, r->ipRcv, ping->seq, ip->ip_ttl, r->data);
+    } else {
+      dprintf(1, "From _gateway (%s): icmp_seq=%d Time to live exceeded\n",
+              r->ipRcv, ping->seq);
     }
   }
-
 }
 
 int ft_receive(t_ping *ping, struct timeval dev) {
@@ -96,6 +96,7 @@ int ft_receive(t_ping *ping, struct timeval dev) {
   r.ret = recvfrom(ping->sockfd, r.buf, sizeof(r.buf), 0,
                    (struct sockaddr *)&r.from, &r.fromlen);
   if (r.ret < 0) {
+    ping->Error++;
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       dprintf(2, "Request timeout for icmp_seq %d\n", ping->seq);
     } else {
@@ -103,20 +104,37 @@ int ft_receive(t_ping *ping, struct timeval dev) {
     }
     return EXIT_FAILURE;
   }
-  struct icmphdr  *icmp = (struct icmphdr *)(r.buf + sizeof(struct iphdr));
-  /* r.ret =ft_cmp_address(ping, &r); */
-  if (r.ret < 0){
-    r.ttsError =1;
-  }else{
-    ping->seqRecv++;
-  }
-
+#ifdef __OS__
+  struct icmp *ipcmp = (struct icmp *)(r.buf + sizeof(struct ip));
+#else
+  struct icmphdr *icmp = (struct icmphdr *)(r.buf + sizeof(struct iphdr));
+#endif
   gettimeofday(&r.end, NULL);
+  ft_cmp_address(ping, &r);
+  switch (ipcmp->icmp_type) {
+  case ICMP_ECHOREPLY:
+    ping->seqRecv++;
+    print_data(ping, &r, dev);
+    ping->stat.insert(&ping->stat, r.data, DATA);
+    ping->stat.insert(&ping->stat, r.stddev, DEV);
+    break;
+  case ICMP_TIMXCEED:
+    r.ipRcv = inet_ntoa(r.from.sin_addr);
+    r.ttsError = 1;
+    print_data(ping, &r, dev);
+    ping->stat.insert(&ping->stat, r.data, DATA);
+    ping->stat.insert(&ping->stat, r.stddev, DEV);
+    ping->Error++;
+    break;
+  default:
+    dprintf(2, "Not reconise");
+    break;
+  }
   if (DEBUG_EXE) {
-    debug((dprintf_func)dprintf, 2, "ICMP receive: %d\n",
-          icmp->type);
-    debug((dprintf_func)dprintf, 2, "Addres receive: %d\n",
-          r.ret);
+    debug((dprintf_func)dprintf, 2, "ICMP sequence: %d\n",
+          ntohs(ipcmp->icmp_seq));
+    debug((dprintf_func)dprintf, 2, "ICMP type: %d\n", ipcmp->icmp_type);
+    debug((dprintf_func)dprintf, 2, "Addres receive: %d\n", r.ret);
     debug((dprintf_func)dprintf, 2, "Time dev init: %3.lf\n",
           (double)dev.tv_usec);
     debug((dprintf_func)dprintf, 2, "Time rcv init: %3.lf\n",
@@ -125,8 +143,5 @@ int ft_receive(t_ping *ping, struct timeval dev) {
           get_diff_tv(r.end, ping->tv));
     debug((dprintf_func)dprintf, 2, "Buff: %s\n", r.buf);
   }
-  print_data(ping, &r, dev);
-  ping->stat.insert(&ping->stat, r.data, DATA);
-  ping->stat.insert(&ping->stat, r.stddev, DEV);
   return EXIT_SUCCESS;
 }
