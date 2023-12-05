@@ -1,4 +1,5 @@
 #include "../includes/ft_ping.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 static int ft_setsockopt(t_ping *ping, socklen_t len) {
@@ -46,7 +47,7 @@ int openSocket(t_ping *ping) {
     fprintf(stderr, "ft_ping: error allocation: %s\n", strerror(errno));
     return 2;
   }
-  memset(ping->packet, 0, sizeof(struct icmp));
+  ft_memset(ping->packet, 0, sizeof(struct icmp));
   ping->alloc = 1;
   if (ping->getname(ping)) {
     return EXIT_FAILURE;
@@ -55,4 +56,4 @@ int openSocket(t_ping *ping) {
     return EXIT_FAILURE;
   setaddr(ping);
   return EXIT_SUCCESS;
-}
+};

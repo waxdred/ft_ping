@@ -1,4 +1,19 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_ping_tools.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jmilhas <jmilhas@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2023/12/05 09:45:47 by jmilhas           #+#    #+#             */
+/*   Updated: 2023/12/05 10:50:50 by jmilhas          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/ft_ping.h"
+#include <arpa/inet.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -16,7 +31,6 @@ void fill_seq_icmp(t_ping *ping) {
   ping->icmp_header->icmp_code = 0;
   ping->icmp_header->icmp_id = getpid() & 0xFFFF;
   ping->icmp_header->icmp_seq = htons(ping->seq);
-  /* memset(ping->icmp_header->icmp_data, '*', ping->packetSize); */
   if (DEBUG_EXE) {
     debug((dprintf_func)dprintf, 2, "Packet size: %d\n", ping->packetSize);
   }
@@ -58,9 +72,15 @@ static void print_data(t_ping *ping, t_recv *r, struct timeval dev) {
 #else
     struct iphdr *ip = (struct iphdr *)r->buf;
 #endif
+    if (r->ttsError == 0){
     dprintf(1, "%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n",
-            r->ret, ping->hostname, ping->ip, ping->seq, ip->ip_ttl, r->data);
+            r->ret, ping->hostname, r->ipRcv, ping->seq, ip->ip_ttl, r->data);
+    }else{
+    dprintf(1, "From _gateway (%s): icmp_seq=%d Time to live exceeded\n",
+             r->ipRcv, ping->seq);
+    }
   }
+
 }
 
 int ft_receive(t_ping *ping, struct timeval dev) {
@@ -83,17 +103,29 @@ int ft_receive(t_ping *ping, struct timeval dev) {
     }
     return EXIT_FAILURE;
   }
+  struct icmphdr  *icmp = (struct icmphdr *)(r.buf + sizeof(struct iphdr));
+  /* r.ret =ft_cmp_address(ping, &r); */
+  if (r.ret < 0){
+    r.ttsError =1;
+  }else{
+    ping->seqRecv++;
+  }
+
   gettimeofday(&r.end, NULL);
   if (DEBUG_EXE) {
+    debug((dprintf_func)dprintf, 2, "ICMP receive: %d\n",
+          icmp->type);
+    debug((dprintf_func)dprintf, 2, "Addres receive: %d\n",
+          r.ret);
     debug((dprintf_func)dprintf, 2, "Time dev init: %3.lf\n",
           (double)dev.tv_usec);
     debug((dprintf_func)dprintf, 2, "Time rcv init: %3.lf\n",
           (double)r.end.tv_usec);
     debug((dprintf_func)dprintf, 2, "Time get diff: %3.lf\n",
           get_diff_tv(r.end, ping->tv));
+    debug((dprintf_func)dprintf, 2, "Buff: %s\n", r.buf);
   }
   print_data(ping, &r, dev);
-  ping->seqRecv++;
   ping->stat.insert(&ping->stat, r.data, DATA);
   ping->stat.insert(&ping->stat, r.stddev, DEV);
   return EXIT_SUCCESS;

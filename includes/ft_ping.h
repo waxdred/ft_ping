@@ -33,10 +33,12 @@
 #define ANSI_COLOR_YELLOW "\x1b[33m"
 #define ANSI_COLOR_RESET "\x1b[0m"
 
-typedef void (*dprintf_func)(int, const char *, ...);
+typedef int (*dprintf_func)(int, const char *, ...);
 
 typedef struct s_recv {
   int ret;
+  int ttsError;
+  char *ipRcv;
   double data;
   double stddev;
   char buf[1024];
@@ -110,6 +112,7 @@ int openSocket(t_ping *ping);
 int parse(t_ping *ping, int ac, char **av);
 int run_ping(t_ping *ping);
 int8_t cmptv(struct timeval tv1, struct timeval tv2, int sec);
+int ft_cmp_address(t_ping *ping, t_recv *r);
 t_ping *get_ping(t_ping *ping);
 double get_diff_tv(struct timeval tv_recv, struct timeval tv_send);
 t_ping *initPing(int ac);
@@ -123,4 +126,5 @@ void handle_signal(int sig);
 void handler_alarm(int sig);
 void help(char *s);
 void debug(dprintf_func func, int fd, const char *format, ...);
+int ft_strcmp(const char *s1, const char *s2);
 #endif
