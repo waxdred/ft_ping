@@ -6,7 +6,7 @@
 /*   By: jmilhas <jmilhas@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/12/05 19:54:00 by jmilhas           #+#    #+#             */
-/*   Updated: 2023/12/05 21:58:57 by jmilhas          ###   ########.fr       */
+/*   Updated: 2023/12/07 09:50:11 by jmilhas          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void closePing(t_ping *ping) {
            ping->seq, ping->seqRecv, getPourcente(ping));
   }
   if (ping->seqRecv != 0) {
-    printf("round-trip min/avg/max/stddev = %.2lf/%.2lf/%.2lf/%.2lf\n",
+    printf("round-trip min/avg/max/stddev = %.2lf/%.2lf/%.2lf/%.2lf ms\n",
            ping->stat.min(&ping->stat, DATA), ping->stat.avg(&ping->stat, DATA),
            ping->stat.max(&ping->stat, DATA), ping->stat.avg(&ping->stat, DEV));
   }

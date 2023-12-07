@@ -1,8 +1,6 @@
 #include "../includes/ft_ping.h"
 
 static int ft_setsockopt(t_ping *ping) {
-  ping->timeout.tv_sec = 0;
-  ping->timeout.tv_usec = 1;
   if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout,
                  sizeof(ping->timeout)) < 0) {
     fprintf(stderr, "ft_ping: error set setsockopt timeout: %s\n",
@@ -54,7 +52,7 @@ int openSocket(t_ping *ping) {
   if (ft_setsockopt(ping))
     goto error;
   setaddr(ping);
-  if (ping->flag.verbose.ok) {
+  if (ping->flag.verbose.ok == 0) {
     if (ping->dest_addr.sin_family == AF_INET) {
       dprintf(1, "ping: sock4.fd: %d (socktype: SOCK_RAW, family: %s)\n",
               ping->sockfd, "AF_INET");

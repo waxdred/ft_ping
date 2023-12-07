@@ -21,9 +21,13 @@ static void ft_getopt(char *av, char *flag, int *opt) {
   }
 }
 
-static int ft_checkHQTW(t_ping *ping, int *i, char **av, char opt) {
+static int ft_checkHQTW(t_ping *ping, int *i, char **av, char opt, int ac) {
   if ('t' == opt) {
     ping->flag.ttl.ok = 0;
+    if (*i + 1 >= ac) {
+      fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i]);
+      return EXIT_FAILURE;
+    }
     ping->flag.ttl.value = ft_atoi(av[*i + 1]);
     if (ping->flag.ttl.value <= 0) {
       fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i + 1]);
@@ -35,6 +39,10 @@ static int ft_checkHQTW(t_ping *ping, int *i, char **av, char opt) {
     ping->ttl = ping->flag.ttl.value;
   } else if ('w' == opt) {
     ping->flag.runtime.ok = 0;
+    if (*i + 1 >= ac) {
+      fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i]);
+      return EXIT_FAILURE;
+    }
     ping->flag.runtime.value = ft_atoi(av[*i + 1]);
     if (ping->flag.runtime.value <= 0) {
       fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i + 1]);
@@ -46,7 +54,7 @@ static int ft_checkHQTW(t_ping *ping, int *i, char **av, char opt) {
   return EXIT_SUCCESS;
 }
 
-static int ft_checkC(t_ping *ping, int *i, char **av, char opt) {
+static int ft_checkC(t_ping *ping, int *i, char **av, char opt, int ac) {
   if ('h' == opt) {
     ping->help(av[0]);
     exit(0);
@@ -54,6 +62,10 @@ static int ft_checkC(t_ping *ping, int *i, char **av, char opt) {
     ping->flag.silence.ok = 0;
   } else if ('c' == opt) {
     ping->flag.count.ok = 0;
+    if (*i + 1 >= ac) {
+      fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i]);
+      return EXIT_FAILURE;
+    }
     ping->flag.count.value = ft_atoi(av[*i + 1]);
     if (ping->flag.count.value <= 0) {
       fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i + 1]);
@@ -67,9 +79,13 @@ static int ft_checkC(t_ping *ping, int *i, char **av, char opt) {
   return EXIT_SUCCESS;
 }
 
-static int ft_checkW(t_ping *ping, int *i, char **av, char opt) {
+static int ft_checkWv(t_ping *ping, int *i, char **av, char opt, int ac) {
   if ('W' == opt) {
     ping->flag.timeout.ok = 0;
+    if (*i + 1 >= ac) {
+      fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i]);
+      return EXIT_FAILURE;
+    }
     ping->flag.timeout.value = ft_atoi(av[*i + 1]);
     if (ping->flag.timeout.value <= 0) {
       fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i + 1]);
@@ -77,6 +93,10 @@ static int ft_checkW(t_ping *ping, int *i, char **av, char opt) {
     }
     ++*i;
     ping->timeout = (struct timeval){ping->flag.timeout.value, 0};
+  }
+  if ('v' == opt) {
+    ping->flag.verbose.ok = 0;
+    ++*i;
   }
   return EXIT_SUCCESS;
 }
@@ -91,11 +111,11 @@ int parse(t_ping *ping, int ac, char **av) {
     ft_getopt(av[i], "hvtcWqw", &opt);
     if (opt == -2)
       return EXIT_FAILURE;
-    if (ft_checkHQTW(ping, &i, av, opt) == EXIT_FAILURE) {
+    if (ft_checkHQTW(ping, &i, av, opt, ac) == EXIT_FAILURE) {
       return EXIT_FAILURE;
-    } else if (ft_checkC(ping, &i, av, opt) == EXIT_FAILURE) {
+    } else if (ft_checkC(ping, &i, av, opt, ac) == EXIT_FAILURE) {
       return EXIT_FAILURE;
-    } else if (ft_checkW(ping, &i, av, opt) == EXIT_FAILURE) {
+    } else if (ft_checkWv(ping, &i, av, opt, ac) == EXIT_FAILURE) {
       return EXIT_FAILURE;
     } else if (opt == -1) {
       if (ping->hostname != NULL) {
