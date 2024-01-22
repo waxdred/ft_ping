@@ -44,7 +44,7 @@ void ft_process(t_ping *ping) {
   while (ping->signal) {
     struct timeval dev;
     ft_bzero(&dev, sizeof(struct timeval));
-    if (!ping->flag.count.ok && ping->flag.count.value == ping->seqRecv) {
+    if (!ping->flag.count.ok && ping->flag.count.value == ping->seq - 1) {
       break;
     }
     gettimeofday(&ping->tv, NULL);

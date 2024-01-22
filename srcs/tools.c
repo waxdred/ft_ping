@@ -21,7 +21,10 @@ double getPourcente(t_ping *ping) {
   if (ping->seqRecv == 0)
     return 100;
   double ret = ping->seq - ping->seqRecv;
-  return ((ret / ping->seq) * 100 / 100);
+  ret = ((ret / ping->seq) * 100 / 100);
+  if (ret < 1)
+    return 0;
+  return ret;
 }
 
 int8_t cmptv(struct timeval tv1, struct timeval tv2, int sec) {

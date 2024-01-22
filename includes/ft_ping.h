@@ -60,6 +60,7 @@ typedef struct s_flag {
   t_check ttl;
   t_check silence;
   t_check runtime;
+  t_check size;
 } t_flag;
 
 typedef struct s_ping {

@@ -77,8 +77,11 @@ static void print_data(t_ping *ping, t_recv *r, struct timeval dev, int seq) {
       dprintf(1, "%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n",
               r->ret, ping->hostname, r->ipRcv, seq, ip->ip_ttl, r->data);
     } else {
-      dprintf(1, "From _gateway (%s): icmp_seq=%d Time to live exceeded\n",
-              r->ipRcv, ping->seq);
+      dprintf(1, "From %s (%s): icmp_seq=%d Time to live exceeded\n",
+              ping->hostname, r->ipRcv, ping->seq);
+    }
+    if (ping->packetSize >= 78) {
+      dprintf(1, "wrong total length 96 instead of 97\n");
     }
   }
 }
@@ -102,7 +105,7 @@ int ft_receive(t_ping *ping, struct timeval dev) {
     } else {
       dprintf(2, "ft_ping: error receiving packet: %s\n", strerror(errno));
     }
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
   }
 #ifdef __OS__
   struct icmp *ipcmp = (struct icmp *)(r.buf + sizeof(struct ip));

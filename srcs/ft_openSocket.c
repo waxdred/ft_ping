@@ -40,13 +40,22 @@ static void setaddr(t_ping *ping) {
 int openSocket(t_ping *ping) {
   if (ft_socket(ping))
     goto error;
-  ping->packetSize = sizeof(struct icmp) + sizeof(struct timeval);
+  if (ping->flag.size.ok != 0) {
+    ping->packetSize = sizeof(struct icmp) + sizeof(struct timeval);
+  } else if (ping->flag.size.ok == 0 && ping->packetSize < 8) {
+    ping->packetSize = 8;
+  }
   ping->packet = (char *)malloc(ping->packetSize);
   if (!ping->packet) {
     fprintf(stderr, "ft_ping: error allocation: %s\n", strerror(errno));
     return 2;
   }
-  ft_memset(ping->packet, 0, sizeof(struct icmp));
+  if (sizeof(struct icmp) > sizeof(ping->packetSize)) {
+    ft_memset(ping->packet, 0, sizeof(ping->packetSize));
+
+  } else {
+    ft_memset(ping->packet, 0, sizeof(struct icmp));
+  }
   ping->alloc = 1;
   if (ping->getname(ping))
     goto error;
