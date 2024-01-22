@@ -78,7 +78,7 @@ static void print_data(t_ping *ping, t_recv *r, struct timeval dev, int seq) {
               r->ret, ping->hostname, r->ipRcv, seq, ip->ip_ttl, r->data);
     } else {
       dprintf(1, "From _gateway (%s): icmp_seq=%d Time to live exceeded\n",
-              r->ipRcv, seq);
+              r->ipRcv, ping->seq);
     }
   }
 }
