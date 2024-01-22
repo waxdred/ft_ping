@@ -1,4 +1,5 @@
 #include "../includes/ft_ping.h"
+#include <stdio.h>
 
 static int ft_setsockopt(t_ping *ping) {
   if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout,

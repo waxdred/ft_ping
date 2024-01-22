@@ -64,7 +64,7 @@ int ft_send(t_ping *ping) {
   return EXIT_SUCCESS;
 }
 
-static void print_data(t_ping *ping, t_recv *r, struct timeval dev) {
+static void print_data(t_ping *ping, t_recv *r, struct timeval dev, int seq) {
   r->data = (double)(r->end.tv_usec - ping->tv.tv_usec) / 1000;
   r->stddev = (double)(r->end.tv_usec - dev.tv_usec) / 1000;
   if (ping->flag.silence.ok == -1) {
@@ -75,10 +75,10 @@ static void print_data(t_ping *ping, t_recv *r, struct timeval dev) {
 #endif
     if (r->ttsError == 0) {
       dprintf(1, "%d bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3lf ms\n",
-              r->ret, ping->hostname, r->ipRcv, ping->seq, ip->ip_ttl, r->data);
+              r->ret, ping->hostname, r->ipRcv, seq, ip->ip_ttl, r->data);
     } else {
       dprintf(1, "From _gateway (%s): icmp_seq=%d Time to live exceeded\n",
-              r->ipRcv, ping->seq);
+              r->ipRcv, seq);
     }
   }
 }
@@ -114,14 +114,14 @@ int ft_receive(t_ping *ping, struct timeval dev) {
   switch (ipcmp->icmp_type) {
   case ICMP_ECHOREPLY:
     ping->seqRecv++;
-    print_data(ping, &r, dev);
+    print_data(ping, &r, dev, ntohs(ipcmp->icmp_seq));
     ping->stat.insert(&ping->stat, r.data, DATA);
     ping->stat.insert(&ping->stat, r.stddev, DEV);
     break;
   case ICMP_TIMXCEED:
     r.ipRcv = inet_ntoa(r.from.sin_addr);
     r.ttsError = 1;
-    print_data(ping, &r, dev);
+    print_data(ping, &r, dev, ntohs(ipcmp->icmp_seq));
     ping->stat.insert(&ping->stat, r.data, DATA);
     ping->stat.insert(&ping->stat, r.stddev, DEV);
     ping->Error++;

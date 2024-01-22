@@ -1,4 +1,5 @@
 #include "../includes/ft_stat.h"
+#include <stdio.h>
 
 t_data *get_data(t_stat *stat, int flag) {
   t_data *ret;
@@ -25,17 +26,13 @@ void free_data(t_stat *stat) {
 
 double get_min_data(t_stat *stat, int flag) {
   t_data *it;
-  int i;
   double ret;
 
-  i = 0;
   ret = 0;
   it = get_data(stat, flag);
 
   while (it) {
-    if (i == 0)
-      ret = it->data;
-    else if (it->data < ret)
+    if (it->data < ret || ret == 0)
       ret = it->data;
     it = it->next;
   }
@@ -65,10 +62,7 @@ double get_avg_data(t_stat *stat, int flag) {
   i = 0;
   it = get_data(stat, flag);
   while (it) {
-    if (i == 0)
-      ret = it->data;
-    else
-      ret += it->data;
+    ret += it->data;
     i++;
     it = it->next;
   }
