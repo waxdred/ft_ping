@@ -34,7 +34,7 @@ void fill_seq_icmp(t_ping *ping) {
   if (DEBUG_EXE) {
     debug((dprintf_func)dprintf, 2, "Packet size: %d\n", ping->packetSize);
   }
-  memcpy(ping->icmp_header->icmp_data, "********", ping->packetSize);
+  ft_memcpy(ping->icmp_header->icmp_data, "*", ping->packetSize);
   ping->icmp_header->icmp_cksum = 0;
   ping->icmp_header->icmp_cksum =
       calculate_checksum((unsigned short *)ping->icmp_header, ping->packetSize);
@@ -118,6 +118,8 @@ int ft_receive(t_ping *ping, struct timeval dev) {
   gettimeofday(&r.end, NULL);
   ft_cmp_address(ping, &r);
   switch (ipcmp->icmp_type) {
+  case ICMP_ECHO:
+    break;
   case ICMP_ECHOREPLY:
     ping->seqRecv++;
     print_data(ping, &r, dev, ntohs(ipcmp->icmp_seq));
@@ -133,7 +135,7 @@ int ft_receive(t_ping *ping, struct timeval dev) {
     ping->Error++;
     break;
   default:
-    dprintf(2, "Not reconise");
+    dprintf(2, "Not reconise\n");
     break;
   }
   if (DEBUG_EXE) {

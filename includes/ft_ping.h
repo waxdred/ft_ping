@@ -131,6 +131,7 @@ void handler_alarm(int sig);
 void help(char *s);
 int ft_isdigit(const char *str);
 void debug(dprintf_func func, int fd, const char *format, ...);
+void *ft_memcpy(void *dst, const void *src, size_t n);
 int ft_strcmp(const char *s1, const char *s2);
 int ft_atoi(const char *str);
 char *ft_trimNb(char *str);

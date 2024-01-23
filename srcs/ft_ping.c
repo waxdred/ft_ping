@@ -33,7 +33,6 @@ void closePing(t_ping *ping) {
   }
   ping->stat.free(&ping->stat);
   ping->free(ping);
-  close(ping->sockfd);
 }
 
 void ft_process(t_ping *ping) {
