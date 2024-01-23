@@ -3,6 +3,7 @@
 #include "./ft_stat.h"
 #include <arpa/inet.h>
 #include <errno.h>
+#include <limits.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -130,4 +131,5 @@ void handler_alarm(int sig);
 void help(char *s);
 void debug(dprintf_func func, int fd, const char *format, ...);
 int ft_strcmp(const char *s1, const char *s2);
+int ft_atoi(const char *str);
 #endif

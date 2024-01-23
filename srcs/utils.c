@@ -16,3 +16,23 @@ void debug(dprintf_func func, int fd, const char *format, ...) {
   vfprintf(stderr, format, args);
   va_end(args);
 }
+
+int ft_atoi(const char *str) {
+  long result;
+  long sign;
+
+  result = 0;
+  sign = 1;
+  if (*str == '-') {
+    sign = -1;
+    str++;
+  } else if (*str == '+')
+    str++;
+  while (*str >= '0' && *str <= '9') {
+    if (result > INT_MAX)
+      return (0);
+    result = result * 10 + (*str - '0');
+    str++;
+  }
+  return ((int)(result * sign));
+}
