@@ -1,4 +1,5 @@
 #include "../includes/ft_ping.h"
+#include <ctype.h>
 
 double get_diff_tv(struct timeval tv_recv, struct timeval tv_send) {
   struct timeval tv_diff;
@@ -17,6 +18,32 @@ void debug(dprintf_func func, int fd, const char *format, ...) {
   va_end(args);
 }
 
+int ft_isdigit(const char *str) {
+  int i = 0;
+  while (str[i]) {
+    if (str[i] < 48 || str[i] > 57) {
+      return 0;
+    }
+    i++;
+  }
+  return 1;
+}
+
+char *ft_trimNb(char *str) {
+  int i = 0;
+  int j = 0;
+  while (str[i] && isdigit(str[i])) {
+    i++;
+  }
+  while (str[i]) {
+    str[j] = str[i];
+    i++;
+    j++;
+  }
+  str[j] = '\0';
+  return (str);
+}
+
 int ft_atoi(const char *str) {
   long result;
   long sign;
@@ -30,7 +57,7 @@ int ft_atoi(const char *str) {
     str++;
   while (*str >= '0' && *str <= '9') {
     if (result > INT_MAX)
-      return (0);
+      return (-1);
     result = result * 10 + (*str - '0');
     str++;
   }

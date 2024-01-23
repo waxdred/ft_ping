@@ -67,7 +67,7 @@ int run_ping(t_ping *ping) {
   signal(SIGINT, handle_signal);
   signal(SIGALRM, handler_alarm);
   printf("PING %s (%s): %d data bytes\n", ping->hostname, ping->ip,
-         ping->packetSize);
+         ping->flag.size.ok == 0 ? ping->flag.size.value : ping->packetSize);
   gettimeofday(&ping->start, NULL);
   handler_alarm(SIGALRM);
   ping->signal = 1;

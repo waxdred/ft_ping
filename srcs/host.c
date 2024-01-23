@@ -30,7 +30,7 @@ int host_to_ip(t_ping *ping) {
   hint.ai_family = AF_INET;
   recv = getaddrinfo(ping->hostname, NULL, &hint, &servinfo);
   if (recv < 0) {
-    fprintf(stderr, "ft_ping: error getaddrinfo\n");
+    fprintf(stderr, "ft_ping: unknown host\n");
     return EXIT_FAILURE;
   } else if (servinfo == NULL) {
     fprintf(stderr, "ft_ping: cannot resolve: %s: Unknown host\n",

@@ -2,6 +2,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static int ft_checkDigit(char *s) {
+  int ret;
+  ret = ft_isdigit(s);
+  if (ret == 0) {
+    fprintf(stderr, "ft_ping: invalid value (`%s'", s);
+    fprintf(stderr, "near `%s')\n", ft_trimNb(s));
+  }
+  return ret;
+}
+
 static void ft_getopt(char *av, char *flag, int *opt) {
   const char *optchar;
 
@@ -28,9 +38,15 @@ static int ft_checkHQTW(t_ping *ping, int *i, char **av, char opt, int ac) {
       fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i]);
       return EXIT_FAILURE;
     }
+    if (ft_checkDigit(av[*i + 1]) == 0) {
+      return EXIT_FAILURE;
+    }
     ping->flag.runtime.value = ft_atoi(av[*i + 1]);
-    if (ping->flag.runtime.value <= 0) {
-      fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i + 1]);
+    if (ping->flag.runtime.value == -1) {
+      fprintf(stderr, "ft_ping: option value too big: '%s'\n", av[*i + 1]);
+      return EXIT_FAILURE;
+    } else if (ping->flag.runtime.value == 0) {
+      fprintf(stderr, "ft_ping: option value too small: '%s'\n", av[*i + 1]);
       return EXIT_FAILURE;
     }
     gettimeofday(&ping->runtime, NULL);
@@ -50,11 +66,15 @@ static int ft_checkC(t_ping *ping, int *i, char **av, char opt, int ac) {
       fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i]);
       return EXIT_FAILURE;
     }
-    ping->packetSize = ft_atoi(av[*i + 1]);
-    if (ping->packetSize < 0) {
-      fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i + 1]);
+    if (ft_checkDigit(av[*i + 1]) == 0) {
       return EXIT_FAILURE;
     }
+    ping->packetSize = ft_atoi(av[*i + 1]);
+    if (ping->packetSize < 0) {
+      fprintf(stderr, "ft_ping: option value too big: '%s'\n", av[*i + 1]);
+      return EXIT_FAILURE;
+    }
+    ping->flag.size.value = ping->packetSize;
     ++*i;
   } else if ('q' == opt) {
     ping->flag.silence.ok = 0;
@@ -62,6 +82,9 @@ static int ft_checkC(t_ping *ping, int *i, char **av, char opt, int ac) {
     ping->flag.count.ok = 0;
     if (*i + 1 >= ac) {
       fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i]);
+      return EXIT_FAILURE;
+    }
+    if (ft_checkDigit(av[*i + 1]) == 0) {
       return EXIT_FAILURE;
     }
     ping->flag.count.value = ft_atoi(av[*i + 1]);
@@ -84,9 +107,15 @@ static int ft_checkWv(t_ping *ping, int *i, char **av, char opt, int ac) {
       fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i]);
       return EXIT_FAILURE;
     }
+    if (ft_checkDigit(av[*i + 1]) == 0) {
+      return EXIT_FAILURE;
+    }
     ping->flag.timeout.value = ft_atoi(av[*i + 1]);
-    if (ping->flag.timeout.value <= 0) {
-      fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i + 1]);
+    if (ping->flag.timeout.value == 0) {
+      fprintf(stderr, "ft_ping: option value too small: '%s'\n", av[*i + 1]);
+      return EXIT_FAILURE;
+    } else if (ping->flag.timeout.value == -1) {
+      fprintf(stderr, "ft_ping: option value too big: '%s'\n", av[*i + 1]);
       return EXIT_FAILURE;
     }
     ++*i;
@@ -125,11 +154,9 @@ int parse(t_ping *ping, int ac, char **av) {
       } else if (ft_checkWv(ping, &i, av, opt, ac) == EXIT_FAILURE) {
         return EXIT_FAILURE;
       } else if (opt == -1) {
-        if (ping->hostname != NULL) {
-          ping->help(av[0]);
-          return EXIT_FAILURE;
+        if (ping->hostname == NULL) {
+          ping->hostname = av[i];
         }
-        ping->hostname = av[i];
       }
     }
     ++i;
