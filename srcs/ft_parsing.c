@@ -56,7 +56,7 @@ static int ft_checkHQTW(t_ping *ping, int *i, char **av, char opt, int ac) {
 }
 
 static int ft_checkC(t_ping *ping, int *i, char **av, char opt, int ac) {
-  if ('h' == opt) {
+  if ('h' == opt || '?' == opt) {
     ping->help(av[0]);
     ping->free(ping);
     exit(0);
@@ -145,7 +145,7 @@ int parse(t_ping *ping, int ac, char **av) {
       ping->ttl = ping->flag.ttl.value;
       ++i;
     } else {
-      ft_getopt(av[i], "hvtcWqws", &opt);
+      ft_getopt(av[i], "hvtcWqws?", &opt);
       if (opt == -2)
         return EXIT_FAILURE;
       if (ft_checkHQTW(ping, &i, av, opt, ac) == EXIT_FAILURE) {

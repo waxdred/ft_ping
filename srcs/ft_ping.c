@@ -66,11 +66,11 @@ int run_ping(t_ping *ping) {
   signal(SIGINT, handle_signal);
   signal(SIGALRM, handler_alarm);
   if (ping->flag.verbose.ok == 0) {
-    printf("PING %s (%s): %d data bytes, ", ping->hostname, ping->ip,
-           ping->flag.size.ok == 0 ? ping->flag.size.value : ping->packetSize);
+    dprintf(1, "PING %s (%s): %d data bytes, ", ping->hostname, ping->ip,
+            ping->flag.size.ok == 0 ? ping->flag.size.value : ping->packetSize);
   } else {
-    printf("PING %s (%s): %d data bytes\n", ping->hostname, ping->ip,
-           ping->flag.size.ok == 0 ? ping->flag.size.value : ping->packetSize);
+    dprintf(1, "PING %s (%s): %d data bytes\n", ping->hostname, ping->ip,
+            ping->flag.size.ok == 0 ? ping->flag.size.value : ping->packetSize);
   }
   gettimeofday(&ping->start, NULL);
   handler_alarm(SIGALRM);

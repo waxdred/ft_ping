@@ -112,15 +112,13 @@ int ft_receive(t_ping *ping, struct timeval dev) {
   }
 #ifdef __OS__
   struct icmp *ipcmp = (struct icmp *)(r.buf + sizeof(struct ip));
-  unsigned int id = ntohs(ipcmp->icmp_id);
 #else
   struct icmphdr *icmp = (struct icmphdr *)(r.buf + sizeof(struct iphdr));
-  unsigned int id = ntohs(icmp->un.echo.id);
 #endif
   gettimeofday(&r.end, NULL);
   ft_cmp_address(ping, &r);
   if (ping->flag.verbose.value == 0) {
-    printf("id 0x%x = %d\n", id, id);
+    PrintId(r);
     ping->flag.verbose.value = 1;
   }
   switch (ipcmp->icmp_type) {
@@ -142,7 +140,6 @@ int ft_receive(t_ping *ping, struct timeval dev) {
     PrintVerboseHexadump(r, ping);
     break;
   default:
-    dprintf(2, "Not reconise\n");
     PrintVerboseHexadump(r, ping);
     break;
   }
