@@ -27,6 +27,7 @@ SRC_GLOBAL						=	main.c				\
 									host.c     			\
 									utils.c     			\
 									memory.c     			\
+									hexadump.c       \
 									ft_parsing.c  		\
 									ft_ping.c  			\
 									ft_ping_init.c    	\

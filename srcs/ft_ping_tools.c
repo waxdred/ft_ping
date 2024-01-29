@@ -139,9 +139,11 @@ int ft_receive(t_ping *ping, struct timeval dev) {
     ping->stat.insert(&ping->stat, r.data, DATA);
     ping->stat.insert(&ping->stat, r.stddev, DEV);
     ping->Error++;
+    PrintVerboseHexadump(r, ping);
     break;
   default:
     dprintf(2, "Not reconise\n");
+    PrintVerboseHexadump(r, ping);
     break;
   }
   if (DEBUG_EXE) {
