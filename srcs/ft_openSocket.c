@@ -45,13 +45,13 @@ int openSocket(t_ping *ping) {
   } else if (ping->flag.size.ok == 0 && ping->packetSize < 8) {
     ping->packetSize = 8;
   }
-  ping->packet = (char *)malloc(ping->packetSize);
+  ping->packet = (char *)malloc(ping->packetSize + 8);
   if (!ping->packet) {
     fprintf(stderr, "ft_ping: error allocation: %s\n", strerror(errno));
     return 2;
   }
   if (sizeof(struct icmp) > sizeof(ping->packetSize)) {
-    ft_memset(ping->packet, 0, sizeof(ping->packetSize));
+    ft_memset(ping->packet, 0, sizeof(ping->packetSize + 8));
 
   } else {
     ft_memset(ping->packet, 0, sizeof(struct icmp));
