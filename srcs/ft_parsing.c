@@ -123,6 +123,7 @@ static int ft_checkWv(t_ping *ping, int *i, char **av, char opt, int ac) {
   }
   if ('v' == opt) {
     ping->flag.verbose.ok = 0;
+    ping->flag.verbose.value = 0;
   }
   return EXIT_SUCCESS;
 }

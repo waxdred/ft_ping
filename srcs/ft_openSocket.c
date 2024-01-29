@@ -62,15 +62,6 @@ int openSocket(t_ping *ping) {
   if (ft_setsockopt(ping))
     goto error;
   setaddr(ping);
-  if (ping->flag.verbose.ok == 0) {
-    if (ping->dest_addr.sin_family == AF_INET) {
-      dprintf(1, "ping: sock4.fd: %d (socktype: SOCK_RAW, family: %s)\n",
-              ping->sockfd, "AF_INET");
-    } else {
-      dprintf(1, "ping: sock6.fd: %d (socktype: SOCK_RAW, family: %s)\n",
-              ping->sockfd, "AF_INET6");
-    }
-  }
   return EXIT_SUCCESS;
 error:
   close(ping->sockfd);
