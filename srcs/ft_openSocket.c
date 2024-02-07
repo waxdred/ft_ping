@@ -2,11 +2,14 @@
 #include <stdio.h>
 
 static int ft_setsockopt(t_ping *ping) {
-  if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout,
-                 sizeof(ping->timeout)) < 0) {
-    fprintf(stderr, "ft_ping: error set setsockopt timeout: %s\n",
-            strerror(errno));
-    goto error;
+  if (ping->flag.timeout.ok == 0) {
+    fprintf(stderr, "Setting timeout\n");
+    if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout,
+                   sizeof(ping->timeout)) < 0) {
+      fprintf(stderr, "ft_ping: error set setsockopt timeout: %s\n",
+              strerror(errno));
+      goto error;
+    }
   }
   if (setsockopt(ping->sockfd, IPPROTO_IP, IP_TTL, &ping->ttl,
                  sizeof(ping->ttl)) < 0) {

@@ -60,22 +60,6 @@ static int ft_checkC(t_ping *ping, int *i, char **av, char opt, int ac) {
     ping->help(av[0]);
     ping->free(ping);
     exit(0);
-  } else if ('s' == opt) {
-    ping->flag.size.ok = 0;
-    if (*i + 1 >= ac) {
-      fprintf(stderr, "ft_ping: invalid arguments: '%s'\n", av[*i]);
-      return EXIT_FAILURE;
-    }
-    if (ft_checkDigit(av[*i + 1]) == 0) {
-      return EXIT_FAILURE;
-    }
-    ping->packetSize = ft_atoi(av[*i + 1]);
-    if (ping->packetSize < 0) {
-      fprintf(stderr, "ft_ping: option value too big: '%s'\n", av[*i + 1]);
-      return EXIT_FAILURE;
-    }
-    ping->flag.size.value = ping->packetSize;
-    ++*i;
   } else if ('q' == opt) {
     ping->flag.silence.ok = 0;
   } else if ('c' == opt) {
@@ -145,7 +129,7 @@ int parse(t_ping *ping, int ac, char **av) {
       ping->ttl = ping->flag.ttl.value;
       ++i;
     } else {
-      ft_getopt(av[i], "hvtcWqws?", &opt);
+      ft_getopt(av[i], "hvtcWqw?", &opt);
       if (opt == -2)
         return EXIT_FAILURE;
       if (ft_checkHQTW(ping, &i, av, opt, ac) == EXIT_FAILURE) {

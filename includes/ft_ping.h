@@ -127,7 +127,6 @@ t_ping *initPing(int ac);
 unsigned short calculate_checksum(void *addr, size_t count);
 void *ft_memcpy(void *dst, const void *src, size_t n);
 void *ft_memset(void *b, int c, size_t len);
-void PrintId(t_recv r);
 void PrintVerboseHexadump(t_recv r, t_ping *ping);
 void closePing(t_ping *ping);
 void debug(dprintf_func func, int fd, const char *format, ...);

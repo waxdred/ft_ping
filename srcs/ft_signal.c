@@ -1,4 +1,6 @@
 #include "../includes/ft_ping.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 t_ping *get_ping(t_ping *ping) {
   static t_ping *p;
@@ -14,7 +16,9 @@ void handle_signal(int sig) {
   if (sig == SIGINT) {
     ping = get_ping(NULL);
     ping->signal = 0;
+    ping->close(ping);
   }
+  exit(0);
 }
 
 void handler_alarm(int sig) {

@@ -66,8 +66,10 @@ int run_ping(t_ping *ping) {
   signal(SIGINT, handle_signal);
   signal(SIGALRM, handler_alarm);
   if (ping->flag.verbose.ok == 0) {
-    dprintf(1, "PING %s (%s): %d data bytes, ", ping->hostname, ping->ip,
-            ping->flag.size.ok == 0 ? ping->flag.size.value : ping->packetSize);
+    dprintf(1, "PING %s (%s): %d data bytes,  id 0x%04x = %u\n", ping->hostname,
+            ping->ip,
+            ping->flag.size.ok == 0 ? ping->flag.size.value : ping->packetSize,
+            getpid(), getpid());
   } else {
     dprintf(1, "PING %s (%s): %d data bytes\n", ping->hostname, ping->ip,
             ping->flag.size.ok == 0 ? ping->flag.size.value : ping->packetSize);

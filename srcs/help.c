@@ -4,7 +4,6 @@ void help(char *s) {
   fprintf(stderr, "Usage: sudo %s [OPTIONS] ip_adress\n\n", s);
   fprintf(stderr, "Options:\n");
   fprintf(stderr, "  -h\t\tAfficher cette aide et quitter.\n");
-  fprintf(stderr, "  -s size\tTaille du paquet ECHO_REQUEST (en octets)\n");
   fprintf(
       stderr,
       "  -c count\tNombre de paquets ECHO_REQUEST à envoyer (puis arrêter).\n");

@@ -60,7 +60,6 @@ int ft_send(t_ping *ping) {
     ping->Error++;
     return EXIT_FAILURE;
   }
-  ping->seq++;
   return EXIT_SUCCESS;
 }
 
@@ -81,9 +80,6 @@ static void print_data(t_ping *ping, t_recv *r, struct timeval dev, int seq) {
           1, "%d bytes from _gateway (%s): icmp_seq=%d Time to live exceeded\n",
           r->ret, r->ipRcv, ping->seq);
     }
-    if (ping->packetSize >= 78) {
-      dprintf(1, "wrong total length 96 instead of 97\n");
-    }
   }
 }
 
@@ -99,6 +95,7 @@ int ft_receive(t_ping *ping, struct timeval dev) {
 
   r.ret = recvfrom(ping->sockfd, r.buf, sizeof(r.buf), 0,
                    (struct sockaddr *)&r.from, &r.fromlen);
+  ping->seq++;
   if (r.ret < 0) {
     ping->Error++;
     if (ping->flag.silence.ok) {
@@ -118,7 +115,6 @@ int ft_receive(t_ping *ping, struct timeval dev) {
   gettimeofday(&r.end, NULL);
   ft_cmp_address(ping, &r);
   if (ping->flag.verbose.value == 0) {
-    PrintId(r);
     ping->flag.verbose.value = 1;
   }
   switch (ipcmp->icmp_type) {

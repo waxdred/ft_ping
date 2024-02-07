@@ -13,16 +13,7 @@
 #include "../includes/ft_ping.h"
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>
-
-void PrintId(t_recv r) {
-  //
-  struct icmp *ipcmp = (struct icmp *)(r.buf + sizeof(struct ip));
-  struct ip *ip = &ipcmp->icmp_ip;
-  unsigned char *cp;
-  cp = (unsigned char *)ip + sizeof(*ip);
-  printf("id 0x%04x = %d\n", *(cp + 4) * 256 + *(cp + 5),
-         *(cp + 4) * 256 + *(cp + 5));
-}
+#include <unistd.h>
 
 void PrintVerboseHexadump(t_recv r, t_ping *ping) {
   struct icmp *ipcmp = (struct icmp *)(r.buf + sizeof(struct ip));
@@ -57,7 +48,7 @@ void PrintVerboseHexadump(t_recv r, t_ping *ping) {
     dprintf(1, "\n");
     dprintf(1, "ICMP: type %u, code %u, size %lu", ipcmp->icmp_type,
             ipcmp->icmp_code, ntohs(ip->ip_len) - hlen);
-    dprintf(1, ", id 0x%04x, seq 0x%04x", *(cp + 4) * 256 + *(cp + 5),
+    dprintf(1, ", id 0x%04x, seq 0x%04x", getpid(),
             *(cp + 6) * 256 + *(cp + 7));
     dprintf(1, "\n");
   }
