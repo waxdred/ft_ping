@@ -134,6 +134,5 @@ void fill_seq_icmp(t_ping *ping);
 void freePing(t_ping *ping);
 void ft_bzero(void *s, size_t n);
 void handle_signal(int sig);
-void handler_alarm(int sig);
 void help(char *s);
 #endif

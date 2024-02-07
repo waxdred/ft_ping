@@ -3,7 +3,6 @@
 
 static int ft_setsockopt(t_ping *ping) {
   if (ping->flag.timeout.ok == 0) {
-    fprintf(stderr, "Setting timeout\n");
     if (setsockopt(ping->sockfd, SOL_SOCKET, SO_RCVTIMEO, &ping->timeout,
                    sizeof(ping->timeout)) < 0) {
       fprintf(stderr, "ft_ping: error set setsockopt timeout: %s\n",

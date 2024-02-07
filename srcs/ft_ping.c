@@ -41,6 +41,9 @@ void ft_process(t_ping *ping) {
   }
 
   while (ping->signal) {
+    if (ping->send(ping)) {
+      continue;
+    }
     struct timeval dev;
     ft_bzero(&dev, sizeof(struct timeval));
     if (!ping->flag.count.ok && ping->flag.count.value == ping->seq - 1) {
@@ -64,7 +67,6 @@ void ft_process(t_ping *ping) {
 
 int run_ping(t_ping *ping) {
   signal(SIGINT, handle_signal);
-  signal(SIGALRM, handler_alarm);
   if (ping->flag.verbose.ok == 0) {
     dprintf(1, "PING %s (%s): %d data bytes,  id 0x%04x = %u\n", ping->hostname,
             ping->ip,
@@ -75,7 +77,6 @@ int run_ping(t_ping *ping) {
             ping->flag.size.ok == 0 ? ping->flag.size.value : ping->packetSize);
   }
   gettimeofday(&ping->start, NULL);
-  handler_alarm(SIGALRM);
   ping->signal = 1;
   ft_process(ping);
   ping->close(ping);

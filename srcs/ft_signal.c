@@ -20,21 +20,3 @@ void handle_signal(int sig) {
   }
   exit(0);
 }
-
-void handler_alarm(int sig) {
-  t_ping *ping;
-
-  if (DEBUG_EXE) {
-    debug((dprintf_func)dprintf, 2, "%salarm%s: new signal\n", ANSI_COLOR_RED,
-          ANSI_COLOR_RESET);
-  }
-  if (sig != SIGALRM)
-    return;
-  ping = get_ping(NULL);
-  if (ping->send(ping)) {
-    if (DEBUG_EXE) {
-      debug((dprintf_func)dprintf, 2, "ft_ping: error sendto\n");
-    }
-  }
-  alarm(1);
-}
