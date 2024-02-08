@@ -16,6 +16,7 @@
 #include <netinet/ip_icmp.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/socket.h>
 
 void freePing(t_ping *ping) {
   if (ping->alloc == 1)
@@ -85,16 +86,27 @@ static void print_data(t_ping *ping, t_recv *r, struct timeval dev, int seq) {
 
 int ft_receive(t_ping *ping, struct timeval dev) {
   t_recv r;
+  struct msghdr msg = {0};
+  struct iovec iov;
 
   ft_bzero(&r, sizeof(t_recv));
-  r.fromlen = sizeof(r.from);
   ft_bzero(r.buf, 1024);
+  r.fromlen = sizeof(r.from);
+  iov.iov_base = r.buf;
+  iov.iov_len = sizeof(r.buf);
+
+  msg.msg_name = &r.from;
+  msg.msg_namelen = r.fromlen;
+  msg.msg_iov = &iov;
+  msg.msg_iovlen = 1;
+  msg.msg_control = r.buf;
+  msg.msg_controllen = sizeof(r.buf);
+  msg.msg_flags = 0;
+
   if (DEBUG_EXE) {
     debug((dprintf_func)dprintf, 2, "Waiting to receive: seq %d\n", ping->seq);
   }
-
-  r.ret = recvfrom(ping->sockfd, r.buf, sizeof(r.buf), 0,
-                   (struct sockaddr *)&r.from, &r.fromlen);
+  r.ret = recvmsg(ping->sockfd, &msg, 0);
   ping->seq++;
   if (r.ret < 0) {
     ping->Error++;
