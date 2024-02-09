@@ -106,8 +106,8 @@ int ft_receive(t_ping *ping, struct timeval dev) {
   if (DEBUG_EXE) {
     debug((dprintf_func)dprintf, 2, "Waiting to receive: seq %d\n", ping->seq);
   }
-  r.ret = recvmsg(ping->sockfd, &msg, 0);
   ping->seq++;
+  r.ret = recvmsg(ping->sockfd, &msg, 0);
   if (r.ret < 0) {
     ping->Error++;
     if (ping->flag.silence.ok) {
